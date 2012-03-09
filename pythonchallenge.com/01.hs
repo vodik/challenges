@@ -12,8 +12,9 @@ rotate :: [a] -> Int -> [a]
 rotate xs n = take (length xs) . drop n $ cycle xs
 
 cipher :: Int -> Cipher
-cipher step = M.fromList $ alph `zip` rotate alph step
-  where alph = ['a'..'z']
+cipher step = M.fromList $ [lower, upper] >>= ap zip (`rotate` step)
+  where lower = ['a'..'z']
+        upper = ['A'..'Z']
 
 substitute :: Cipher -> Char -> Char
 substitute = ap fromMaybe . flip M.lookup
