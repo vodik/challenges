@@ -9,9 +9,9 @@ type FrequencyMap = Map Char Int
 type CharSet = Set Char
 
 freqMap :: String -> FrequencyMap
-freqMap = foldr (M.alter update) M.empty
-  where update (Just x) = Just $ x + 1
-        update Nothing  = Just 1
+freqMap = foldr (M.alter count) M.empty
+  where count (Just x) = Just $ x + 1
+        count Nothing  = Just 1
 
 lowFreq :: FrequencyMap -> Int -> CharSet
 lowFreq m c = S.fromList . fmap fst . M.toList $ M.filter (<= c) m
