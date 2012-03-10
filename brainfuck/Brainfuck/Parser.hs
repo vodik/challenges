@@ -1,4 +1,7 @@
-module Brainfuck.Parser (Op (..), parseBrainfuck) where
+module Brainfuck.Parser
+    ( Op (..)
+    , parseBrainfuck
+    ) where
 
 import Control.Applicative hiding ((<|>))
 import Text.ParserCombinators.Parsec
@@ -10,11 +13,20 @@ data Op = Op Char
 parseBrainfuck :: String -> Either ParseError [Op]
 parseBrainfuck = parse (opsTill eof) ""
 
-opsTill :: Parser a -> Parser [Op]
-opsTill = manyTill ops
+junk :: Parser ()
+junk = skipMany $ noneOf "+-<>.,[]"
 
-ops :: Parser Op
-ops = try op <|> try loop
+opsTill :: Parser a -> Parser [Op]
+opsTill f = do
+    junk
+    manyTill (ops <* junk) f
   where
-    op   = Op <$> oneOf "+-<>.,"
-    loop = char '[' >> Loop <$> opsTill (char ']')
+    ops = try op <|> loop
+
+op :: Parser Op
+op = Op <$> oneOf "+-<>.," <?> "operator"
+
+loop :: Parser Op
+loop = do
+    char '['
+    Loop <$> opsTill (char ']') <?> "loop"

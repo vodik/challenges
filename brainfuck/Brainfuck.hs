@@ -24,7 +24,7 @@ cmd '.' = chr . value <$> get >>= tell . return
 cmd ',' = ord <$> io getChar >>= modify . store
 
 brainfuck :: [Op] -> Operation
-brainfuck (Op x:xs)   = cmd x  >> brainfuck xs
+brainfuck (Op   x:xs) = cmd  x >> brainfuck xs
 brainfuck (Loop l:xs) = loop l >> brainfuck xs
 brainfuck []          = return ()
 
@@ -33,10 +33,11 @@ loop xs = let l = brainfuck xs >> whenValue l in whenValue l
 
 main :: IO ()
 main = do
-    program <- parseBrainfuck <$> getLine
+    program <- parseBrainfuck <$> getContents
     case program of
         Left err -> print err
         Right xs -> runMachine (brainfuck xs) >>= print
+        -- Right xs -> execMachine (brainfuck xs) >>= putStrLn
 
 io :: (MonadIO m) => IO a -> m a
 io = liftIO
