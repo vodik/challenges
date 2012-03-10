@@ -1,4 +1,4 @@
-module Brainfuck.Parser where
+module Brainfuck.Parser (Op (..), parseBrainfuck) where
 
 import Control.Applicative hiding ((<|>))
 import Text.ParserCombinators.Parsec

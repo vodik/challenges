@@ -3,8 +3,8 @@ module Zipper where
 data Zipper a = Zipper a [a] [a]
     deriving (Show, Read)
 
-emptyZipper :: a -> Zipper a
-emptyZipper d = Zipper d [] []
+empty :: a -> Zipper a
+empty d = Zipper d [] []
 
 right :: Zipper a -> Zipper a
 right (Zipper d l []    ) = Zipper d (d:l) []

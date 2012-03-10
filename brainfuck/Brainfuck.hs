@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Char
@@ -11,36 +12,31 @@ import Zipper
 
 type Operation = Machine ()
 
-inc :: (Num a) => Zipper a -> Zipper a
-inc = alter (+ 1)
-
-dec :: (Num a) => Zipper a -> Zipper a
-dec = alter $ subtract 1
-
-showValue :: Operation
-showValue = chr . value <$> get >>= tell . return
-
-readValue :: Operation
-readValue = ord <$> io getChar >>= modify . store
+whenValue :: Operation -> Operation
+whenValue f = value <$> get >>= \v -> when (v /= 0) f
 
 cmd :: Char -> Operation
 cmd '>' = modify right
 cmd '<' = modify left
-cmd '+' = modify inc
-cmd '-' = modify dec
-cmd '.' = showValue
-cmd ',' = readValue
+cmd '+' = modify $ alter (+ 1)
+cmd '-' = modify . alter $ subtract 1
+cmd '.' = chr . value <$> get >>= tell . return
+cmd ',' = ord <$> io getChar >>= modify . store
 
-brainfuckMachine :: String -> Operation
-brainfuckMachine = mconcat . map cmd
+brainfuck :: [Op] -> Operation
+brainfuck (Op x:xs)   = cmd x  >> brainfuck xs
+brainfuck (Loop l:xs) = loop l >> brainfuck xs
+brainfuck []          = return ()
+
+loop :: [Op] -> Operation
+loop xs = let l = brainfuck xs >> whenValue l in whenValue l
 
 main :: IO ()
--- main = getLine >>= runMachine . brainfuckMachine >>= print
 main = do
     program <- parseBrainfuck <$> getLine
     case program of
         Left err -> print err
-        Right xs -> print xs
+        Right xs -> runMachine (brainfuck xs) >>= print
 
 io :: (MonadIO m) => IO a -> m a
 io = liftIO
