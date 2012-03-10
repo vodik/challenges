@@ -5,6 +5,8 @@ module Machine
     , Machine (..)
     , runMachine
     , execMachine
+    , shiftLeft, shiftRight
+    , alter, value, store
     ) where
 
 import Control.Applicative
@@ -24,3 +26,18 @@ runMachine (Machine a) = runStateT (execWriterT a) (Z.empty 0)
 
 execMachine :: Machine a -> IO String
 execMachine a = fst <$> runMachine a
+
+shiftLeft :: Machine ()
+shiftLeft = modify Z.left
+
+shiftRight :: Machine ()
+shiftRight = modify Z.right
+
+alter :: (Int -> Int) -> Machine ()
+alter = modify . Z.alter
+
+value :: Machine Int
+value = Z.value <$> get
+
+store :: Int -> Machine ()
+store = alter . const

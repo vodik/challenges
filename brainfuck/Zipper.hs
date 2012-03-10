@@ -21,6 +21,3 @@ value (Zipper d l (r:rs)) = r
 alter :: (a -> a) -> Zipper a -> Zipper a
 alter f (Zipper d l []    ) = Zipper d l [f d]
 alter f (Zipper d l (r:rs)) = Zipper d l (f r:rs)
-
-store :: a -> Zipper a -> Zipper a
-store = alter . const

@@ -8,20 +8,19 @@ import Data.Char
 
 import Brainfuck.Parser
 import Machine
-import Zipper
 
 type Operation = Machine ()
 
 whenValue :: Operation -> Operation
-whenValue f = value <$> get >>= \v -> when (v /= 0) f
+whenValue f = value >>= \v -> when (v /= 0) f
 
 cmd :: Char -> Operation
-cmd '>' = modify right
-cmd '<' = modify left
-cmd '+' = modify $ alter (+ 1)
-cmd '-' = modify . alter $ subtract 1
-cmd '.' = chr . value <$> get >>= tell . return
-cmd ',' = ord <$> io getChar >>= modify . store
+cmd '>' = shiftRight
+cmd '<' = shiftLeft
+cmd '+' = alter (+ 1)
+cmd '-' = alter $ subtract 1
+cmd '.' = chr <$> value      >>= tell . return
+cmd ',' = ord <$> io getChar >>= store
 
 brainfuck :: [Op] -> Operation
 brainfuck (Op   x:xs) = cmd  x >> brainfuck xs
