@@ -1,1 +1,2 @@
-main = print (2 ^ 38)
+main :: IO ()
+main = print $ 2 ^ 38

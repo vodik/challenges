@@ -18,4 +18,4 @@ lowFreq m c = S.fromList . fmap fst . M.toList $ M.filter (<= c) m
 
 main :: IO ()
 main = freqFilter <$> getContents >>= putStrLn
-  where freqFilter = flip S.member . flip lowFreq 10 . freqMap >>= filter
+  where freqFilter = flip S.member . (`lowFreq` 10) . freqMap >>= filter

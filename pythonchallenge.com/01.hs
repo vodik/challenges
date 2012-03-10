@@ -12,7 +12,7 @@ rotate :: [a] -> Int -> [a]
 rotate xs n = take (length xs) . drop n $ cycle xs
 
 cipher :: Int -> Cipher
-cipher step = M.fromList $ [lower, upper] >>= ap zip (`rotate` step)
+cipher step = M.fromList $ [lower, upper] >>= zip `ap` (`rotate` step)
   where lower = ['a'..'z']
         upper = ['A'..'Z']
 
@@ -21,9 +21,9 @@ substitute = ap fromMaybe . flip M.lookup
 
 main :: IO ()
 main = fmap decipher . lines <$> getContents >>= mapM_ putStrLn
-  where decipher = fmap . substitute . cipher $ step 'o' 'q'
+  where decipher = fmap . substitute . cipher $ 'o' `step` 'q'
 
 step :: Char -> Char -> Int
-step = abs .: on (-) ord
+step = abs .: (-) `on` ord
 
-a .: b = (a .) . b
+(.:) = (.) . (.)
