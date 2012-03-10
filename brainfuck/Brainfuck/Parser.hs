@@ -17,11 +17,10 @@ junk :: Parser ()
 junk = skipMany $ noneOf "+-<>.,[]"
 
 opsTill :: Parser a -> Parser [Op]
-opsTill f = do
-    junk
-    manyTill (ops <* junk) f
-  where
-    ops = try op <|> loop
+opsTill f = junk *> manyTill (ops <* junk) f
+
+ops :: Parser Op
+ops = try op <|> loop
 
 op :: Parser Op
 op = Op <$> oneOf "+-<>.," <?> "operator"
