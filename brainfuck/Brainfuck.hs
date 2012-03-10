@@ -5,6 +5,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 import Data.Char
 
+import Brainfuck.Parser
 import Machine
 import Zipper
 
@@ -34,7 +35,12 @@ brainfuckMachine :: String -> Operation
 brainfuckMachine = mconcat . map cmd
 
 main :: IO ()
-main = getLine >>= runMachine . brainfuckMachine >>= print
+-- main = getLine >>= runMachine . brainfuckMachine >>= print
+main = do
+    program <- parseBrainfuck <$> getLine
+    case program of
+        Left err -> print err
+        Right xs -> print xs
 
 io :: (MonadIO m) => IO a -> m a
 io = liftIO
