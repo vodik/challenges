@@ -6,7 +6,8 @@ module Brainfuck.Parser
 import Control.Applicative hiding ((<|>))
 import Text.ParserCombinators.Parsec
 
-data Op = Op Char
+data Op = Op   Char
+        | OpN  Int Char
         | Loop [Op]
         deriving (Eq, Show, Read)
 

@@ -13,6 +13,7 @@ import System.Exit
 import System.IO
 
 import Brainfuck.Parser
+import Brainfuck.Optimizer
 import Memory.Tape
 import Machine
 
@@ -26,18 +27,19 @@ getInput = do
         Left (SomeException _) -> return '\0'
         Right c                -> return c
 
-eval :: Char -> Operation
-eval '>' = shiftRight
-eval '<' = shiftLeft
-eval '+' = alter (+ 1)
-eval '-' = alter (subtract 1)
-eval '.' = chr . fromEnum <$> value >>= putC
-eval ',' = ord <$> io getInput >>= store . toEnum
+eval :: Char -> Int -> Operation
+eval '>' n = replicateM_ n shiftRight
+eval '<' n = replicateM_ n shiftLeft
+eval '+' n = alter (+ toEnum n)
+eval '-' n = alter . subtract $ toEnum n
+eval '.' _ = chr . fromEnum <$> value >>= putC
+eval ',' _ = ord <$> io getInput >>= store . toEnum
 
 brainfuck :: [Op] -> Operation
-brainfuck (Op   x:xs) = eval x >> brainfuck xs
-brainfuck (Loop l:xs) = loop l >> brainfuck xs
-brainfuck []          = return ()
+brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
+brainfuck (OpN n x:xs) = eval x n >> brainfuck xs
+brainfuck (Loop  l:xs) = loop l   >> brainfuck xs
+brainfuck []           = return ()
 
 loop :: [Op] -> Operation
 loop xs = let l = brainfuck xs >> whenValue l in whenValue l
@@ -47,7 +49,7 @@ main = getArgs >>= parse >>= \code ->
     case parseBrainfuck code of
         Left err -> debug err
         Right xs -> do
-            (out, mem) <- runMachine (brainfuck xs)
+            (out, mem) <- runMachine . brainfuck $ optimize xs
             putStrLn out
             debug mem
   where
