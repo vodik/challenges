@@ -69,11 +69,11 @@ main = getArgs >>= parse >>= \code ->
 
     usage   = putStrLn "Usage: bf [-vh] [file]"
     version = putStrLn "Brainfuck 0.1"
-    exit    = exitWith ExitSuccess
+    exit    = exitSuccess
     die     = exitWith $ ExitFailure 1
 
 debug :: Show a => a -> IO ()
-debug = hPutStrLn stderr . show
+debug = hPrint stderr
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
