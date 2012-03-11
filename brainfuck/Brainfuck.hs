@@ -14,10 +14,10 @@ import System.IO
 
 import Brainfuck.Parser
 import Brainfuck.Optimizer
-import Memory.Tape
+import Memory.Classic
 import Machine
 
-type BFMachine = Machine Tape Word8
+type BFMachine = Machine Classic Word8
 type Operation = BFMachine ()
 
 getInput :: IO Char
@@ -50,7 +50,7 @@ main = getArgs >>= parse >>= \code ->
         Left err -> debug err
         Right xs -> do
             (out, mem) <- runMachine . brainfuck $ optimize xs
-            putStr out
+            putStrLn out
             debug mem
   where
     parse ["-h"] = usage   >> exit
