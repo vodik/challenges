@@ -14,10 +14,11 @@ import System.IO
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as B8
 
+import Machine
 import Brainfuck.Parser
 import Brainfuck.Optimizer
 import Memory.Tape
-import Machine
+import Memory.Sparse
 
 type Cell = Word8
 type BFMachine = Machine Tape Cell

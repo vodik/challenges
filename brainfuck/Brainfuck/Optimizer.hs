@@ -1,8 +1,5 @@
 module Brainfuck.Optimizer where
 
-import Control.Monad
-import Data.Monoid
-
 import Brainfuck.Parser
 
 compress :: [Op] -> [Op]
