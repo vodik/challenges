@@ -49,12 +49,21 @@ main = getArgs >>= parse >>= \code ->
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
     parse [fs]   = readFile fs
-    parse _      = getContents
+    parse _      = readLines
 
     usage   = putStrLn "Usage: bf [-vh] [file]"
     version = putStrLn "Brainfuck 0.1"
     exit    = exitWith ExitSuccess
     die     = exitWith $ ExitFailure 1
+
+flushStr :: String -> IO ()
+flushStr str = putStr str >> hFlush stdout
+
+readLines :: IO String
+readLines = flushStr "# " >> getLine >>= \line ->
+    if null line
+        then return ""
+        else (line ++) <$> readLines
 
 io :: (MonadIO m) => IO a -> m a
 io = liftIO
