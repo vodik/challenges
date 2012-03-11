@@ -4,4 +4,4 @@
     <<[>>>>>[>>>[-]+++++++++<[>-<-]+++++++++>[-[<->-]+[<<<]]<[>+<-]>]<<-]<<-
 ]
 
-Outputs square numbers from 0 to 10000
+Outputs square numbers from 0 to 10000!

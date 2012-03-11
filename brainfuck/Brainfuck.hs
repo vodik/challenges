@@ -11,6 +11,8 @@ import Data.Word
 import System.Environment
 import System.Exit
 import System.IO
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as B8
 
 import Brainfuck.Parser
 import Brainfuck.Optimizer
@@ -20,20 +22,20 @@ import Machine
 type BFMachine = Machine Tape Word8
 type Operation = BFMachine ()
 
-getInput :: IO Char
+getInput :: IO Int
 getInput = do
     input <- try getChar
     case input of
-        Left (SomeException _) -> return '\0'
-        Right c                -> return c
+        Left (SomeException _) -> return 0
+        Right c                -> return $ ord c
 
 eval :: Char -> Int -> Operation
-eval '>' n = replicateM_ n shiftRight
-eval '<' n = replicateM_ n shiftLeft
+eval '>' n = shiftRight >*> n
+eval '<' n = shiftLeft  >*> n
 eval '+' n = alter (+ toEnum n)
 eval '-' n = alter . subtract $ toEnum n
-eval '.' n = replicateM_ n $ chr . fromEnum <$> value >>= putC
-eval ',' _ = ord <$> io getInput >>= store . toEnum
+eval '.' n = output >*> n
+eval ',' _ = toEnum <$> io getInput >>= store
 
 brainfuck :: [Op] -> Operation
 brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
@@ -50,7 +52,7 @@ main = getArgs >>= parse >>= \code ->
         Left err -> debug err
         Right xs -> do
             (out, mem) <- runMachine . brainfuck $ optimize xs
-            putStrLn out
+            B8.putStrLn $ BS.pack out
             debug mem
   where
     parse ["-h"] = usage   >> exit
