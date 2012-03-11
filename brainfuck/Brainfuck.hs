@@ -50,7 +50,7 @@ main = getArgs >>= parse >>= \code ->
         Left err -> debug err
         Right xs -> do
             (out, mem) <- runMachine . brainfuck $ optimize xs
-            putStrLn out
+            putStr out
             debug mem
   where
     parse ["-h"] = usage   >> exit
