@@ -15,37 +15,35 @@ import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Writer
 
-import Zipper (Zipper)
-import qualified Zipper as Z
+import Memory (Memory)
+import qualified Memory as M
 
-type Memory = Zipper Int
+newtype Machine m s a = Machine (WriterT String (StateT (m s) IO) a)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadWriter String, MonadState (m s))
 
-newtype Machine a = Machine (WriterT String (StateT Memory IO) a)
-    deriving (Functor, Applicative, Monad, MonadIO, MonadWriter String, MonadState Memory)
+runMachine :: (Memory m, Num s) => Machine m s a -> IO (String, m s)
+runMachine (Machine a) = runStateT (execWriterT a) (M.empty 0)
 
-runMachine :: Machine a -> IO (String, Memory)
-runMachine (Machine a) = runStateT (execWriterT a) (Z.empty 0)
-
-execMachine :: Machine a -> IO String
+execMachine :: (Memory m, Num s) => Machine m s a -> IO String
 execMachine a = fst <$> runMachine a
 
-putC :: Char -> Machine ()
+putC :: Memory m => Char -> Machine m s ()
 putC = tell . return
 
-shiftLeft :: Machine ()
-shiftLeft = modify Z.left
+shiftLeft :: Memory m => Machine m s ()
+shiftLeft = modify M.left
 
-shiftRight :: Machine ()
-shiftRight = modify Z.right
+shiftRight :: Memory m => Machine m s ()
+shiftRight = modify M.right
 
-alter :: (Int -> Int) -> Machine ()
-alter = modify . Z.alter
+alter :: (Memory m, Num s) => (s -> s) -> Machine m s ()
+alter = modify . M.alter
 
-value :: Machine Int
-value = Z.value <$> get
+value :: (Memory m, Num s) => Machine m s s
+value = M.value <$> get
 
-store :: Int -> Machine ()
+store :: (Memory m, Num s) => s -> Machine m s ()
 store = alter . const
 
-whenValue :: Machine () -> Machine ()
+whenValue :: (Memory m, Eq s, Num s) => Machine m s () -> Machine m s ()
 whenValue f = value >>= \v -> when (v /= 0) f
