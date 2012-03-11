@@ -14,10 +14,10 @@ import System.IO
 
 import Brainfuck.Parser
 import Brainfuck.Optimizer
-import Memory.Classic
+import Memory.Tape
 import Machine
 
-type BFMachine = Machine Classic Word8
+type BFMachine = Machine Tape Word8
 type Operation = BFMachine ()
 
 getInput :: IO Char
@@ -32,7 +32,7 @@ eval '>' n = replicateM_ n shiftRight
 eval '<' n = replicateM_ n shiftLeft
 eval '+' n = alter (+ toEnum n)
 eval '-' n = alter . subtract $ toEnum n
-eval '.' _ = chr . fromEnum <$> value >>= putC
+eval '.' n = replicateM_ n $ chr . fromEnum <$> value >>= putC
 eval ',' _ = ord <$> io getInput >>= store . toEnum
 
 brainfuck :: [Op] -> Operation
