@@ -19,23 +19,30 @@ import Brainfuck.Optimizer
 import Memory.Tape
 import Machine
 
-type BFMachine = Machine Tape Word8
+type Cell = Word8
+type BFMachine = Machine Tape Cell
 type Operation = BFMachine ()
 
-getInput :: IO Int
+getInput :: IO Cell
 getInput = do
     input <- try getChar
     case input of
         Left (SomeException _) -> return 0
-        Right c                -> return $ ord c
+        Right c                -> return . toEnum $ ord c
+
+incWord :: Int -> Cell -> Cell
+incWord = (+) . toEnum
+
+decWord :: Int -> Cell -> Cell
+decWord = subtract . toEnum
 
 eval :: Char -> Int -> Operation
 eval '>' n = shiftRight >*> n
 eval '<' n = shiftLeft  >*> n
-eval '+' n = alter (+ toEnum n)
-eval '-' n = alter . subtract $ toEnum n
+eval '+' n = alter $ incWord n
+eval '-' n = alter $ decWord n
 eval '.' n = output >*> n
-eval ',' _ = toEnum <$> io getInput >>= store
+eval ',' _ = io getInput >>= store
 
 brainfuck :: [Op] -> Operation
 brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs

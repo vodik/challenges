@@ -25,7 +25,7 @@ runMachine :: (Memory m, Num s) => Machine m s a -> IO ([s], m s)
 runMachine (Machine a) = runStateT (execWriterT a) (M.empty 0)
 
 execMachine :: (Memory m, Num s) => Machine m s a -> IO [s]
-execMachine a = fst <$> runMachine a
+execMachine = (fst <$>) . runMachine
 
 shiftLeft :: Memory m => Machine m s ()
 shiftLeft = modify M.left
@@ -48,6 +48,6 @@ store = alter . const
 whenValue :: (Memory m, Eq s, Num s) => Machine m s () -> Machine m s ()
 whenValue f = value >>= \v -> when (v /= 0) f
 
+infix >*>
 (>*>) :: Monad m => m a -> Int -> m ()
 (>*>) = flip replicateM_
-infix >*>
