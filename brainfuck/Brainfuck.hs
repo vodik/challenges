@@ -45,8 +45,11 @@ loop xs = let l = brainfuck xs >> whenValue l in whenValue l
 main :: IO ()
 main = getArgs >>= parse >>= \code ->
     case parseBrainfuck code of
-        Left err -> print err
-        Right xs -> runMachine (brainfuck xs) >>= print
+        Left err -> debug err
+        Right xs -> do
+            (out, mem) <- runMachine (brainfuck xs)
+            putStrLn out
+            debug mem
   where
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
@@ -57,6 +60,9 @@ main = getArgs >>= parse >>= \code ->
     version = putStrLn "Brainfuck 0.1"
     exit    = exitWith ExitSuccess
     die     = exitWith $ ExitFailure 1
+
+debug :: Show a => a -> IO ()
+debug = hPutStrLn stderr . show
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
