@@ -66,7 +66,8 @@ main = getArgs >>= parse >>= \code ->
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
     parse [fs]   = readFile fs
-    parse _      = readLines
+    parse []     = readLines
+    parse _      = usage   >> exit
 
     usage   = putStrLn "Usage: bf [-vh] [file]"
     version = putStrLn "Brainfuck 0.1"
