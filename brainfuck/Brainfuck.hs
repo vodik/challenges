@@ -21,8 +21,8 @@ import Memory.Tape
 import Memory.Sparse
 
 type Cell = Word8
-type BFMachine = Machine Tape Cell
-type Operation = BFMachine ()
+type BFMachine t = Machine t Cell
+type Operation t = BFMachine t ()
 
 getInput :: IO Cell
 getInput = do
@@ -37,7 +37,7 @@ incWord = (+) . toEnum
 decWord :: Int -> Cell -> Cell
 decWord = subtract . toEnum
 
-eval :: Char -> Int -> Operation
+eval :: Memory t => Char -> Int -> Operation t
 eval '>' n = shiftRight >*> n
 eval '<' n = shiftLeft  >*> n
 eval '+' n = alter $ incWord n
@@ -45,13 +45,13 @@ eval '-' n = alter $ decWord n
 eval '.' n = output >*> n
 eval ',' _ = io getInput >>= store
 
-brainfuck :: [Op] -> Operation
+brainfuck :: Memory t => [Op] -> Operation t
 brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
 brainfuck (OpN n x:xs) = eval x n >> brainfuck xs
 brainfuck (Loop  l:xs) = loop l   >> brainfuck xs
 brainfuck []           = return ()
 
-loop :: [Op] -> Operation
+loop :: Memory t => [Op] -> Operation t
 loop xs = let l = brainfuck xs >> whenValue l in whenValue l
 
 main :: IO ()
@@ -59,7 +59,7 @@ main = getArgs >>= parse >>= \code ->
     case parseBrainfuck code of
         Left err -> debug err
         Right xs -> do
-            (out, mem) <- runMachine . brainfuck $ optimize xs
+            (out, mem) <- runMachine emptyMemory . brainfuck $ optimize xs
             B8.putStrLn $ BS.pack out
             debug mem
   where
@@ -73,6 +73,12 @@ main = getArgs >>= parse >>= \code ->
     version = putStrLn "Brainfuck 0.1"
     exit    = exitSuccess
     die     = exitWith $ ExitFailure 1
+
+sparseMemory :: Sparse Cell
+sparseMemory = emptySparse 0
+
+emptyMemory :: Tape Cell
+emptyMemory = emptyTape False 0
 
 debug :: Show a => a -> IO ()
 debug = hPrint stderr

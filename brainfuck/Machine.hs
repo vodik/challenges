@@ -13,39 +13,39 @@ module Machine
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
-import Control.Monad.Writer
+import Control.Monad.Writer.Strict
 
 import Memory (Memory)
 import qualified Memory as M
 
-newtype Machine m s a = Machine (WriterT [s] (StateT (m s) IO) a)
-    deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [s], MonadState (m s))
+newtype Machine t c a = Machine (WriterT [c] (StateT (t c) IO) a)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [c], MonadState (t c))
 
-runMachine :: (Memory m, Num s) => Machine m s a -> IO ([s], m s)
-runMachine (Machine a) = runStateT (execWriterT a) (M.empty 0)
+runMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO ([c], t c)
+runMachine mem (Machine a) = runStateT (execWriterT a) mem
 
-execMachine :: (Memory m, Num s) => Machine m s a -> IO [s]
-execMachine = (fst <$>) . runMachine
+execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
+execMachine mem = (fst <$>) . runMachine mem
 
-shiftLeft :: Memory m => Machine m s ()
+shiftLeft :: Memory t => Machine t c ()
 shiftLeft = modify M.left
 
-shiftRight :: Memory m => Machine m s ()
+shiftRight :: Memory t => Machine t c ()
 shiftRight = modify M.right
 
-output :: (Memory m, Num s) => Machine m s ()
+output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return
 
-alter :: (Memory m, Num s) => (s -> s) -> Machine m s ()
+alter :: (Memory t, Eq c, Num c) => (c -> c) -> Machine t c ()
 alter = modify . M.alter
 
-value :: (Memory m, Num s) => Machine m s s
+value :: (Memory t, Num c) => Machine t c c
 value = M.value <$> get
 
-store :: (Memory m, Num s) => s -> Machine m s ()
+store :: (Memory t, Eq c, Num c) => c -> Machine t c ()
 store = alter . const
 
-whenValue :: (Memory m, Eq s, Num s) => Machine m s () -> Machine m s ()
+whenValue :: (Memory t, Eq c, Num c) => Machine t c () -> Machine t c ()
 whenValue f = value >>= \v -> when (v /= 0) f
 
 infix >*>
