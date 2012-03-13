@@ -31,8 +31,8 @@ execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
 shift :: Memory t => Direction -> Int -> Machine t c ()
-shift L = modify . run M.left
-shift R = modify . run M.right
+shift L n = modify $ run n M.left
+shift R n = modify $ run n M.right
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return
@@ -53,6 +53,5 @@ infix >*>
 (>*>) :: Monad m => m a -> Int -> m ()
 (>*>) = flip replicateM_
 
-run :: (a -> a) -> Int -> a -> a
-run f 0 = id
-run f n = foldr1 (.) (replicate n f)
+run :: Int -> (a -> a) -> a -> a
+run n f = foldr (.) id $ replicate n f

@@ -18,6 +18,7 @@ import Brainfuck.Optimizer
 import Memory.Tape
 import Memory.Sparse
 
+type Cell = Word8
 type Operation t c = Machine t c ()
 
 toCell :: Num c => Char -> c
@@ -76,10 +77,10 @@ main = getArgs >>= parse >>= \code ->
     exit    = exitSuccess
     die     = exitWith $ ExitFailure 1
 
-sparseMemory :: Num c => Sparse c
+sparseMemory :: Sparse Cell
 sparseMemory = emptySparse 0
 
-emptyMemory :: Num c => Tape c
+emptyMemory :: Tape Cell
 emptyMemory = emptyTape False 0
 
 debug :: Show a => a -> IO ()
