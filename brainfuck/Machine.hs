@@ -16,10 +16,8 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer.Strict
 
-import Memory (Memory)
+import Memory (Memory, Direction (..))
 import qualified Memory as M
-
-data Direction = L | R
 
 newtype Machine t c a = Machine (WriterT [c] (StateT (t c) IO) a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [c], MonadState (t c))
@@ -31,8 +29,7 @@ execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
 shift :: Memory t => Direction -> Int -> Machine t c ()
-shift L = modify . flip run M.left
-shift R = modify . flip run M.right
+shift d = modify . (`run` M.shift d)
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return

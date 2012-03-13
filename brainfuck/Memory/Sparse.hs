@@ -14,9 +14,13 @@ emptySparse :: Num a => a -> Sparse a
 emptySparse d = Sparse d 0 M.empty
 
 instance Memory Sparse where
-    right (Sparse d i m) = Sparse d (1 + i) m
-    left  (Sparse d i m) = Sparse d (1 `subtract` i) m
+    shift dir (Sparse d i m) = let (+/-) = op dir in Sparse d (i +/- 1) m
+
     value (Sparse d i m) = fromMaybe d $ M.lookup i m
 
     alter f (Sparse d i m) = Sparse d i $ M.alter f' i m
       where f' v = let v' = f $ fromMaybe d v in guard (v' /= d) >> return v'
+
+op :: Num a => Direction -> a -> a -> a
+op L = (-)
+op R = (+)

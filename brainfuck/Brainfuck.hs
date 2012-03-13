@@ -64,7 +64,7 @@ main = getArgs >>= parse >>= \code ->
         Left err -> debug err
         Right xs -> do
             (out, mem) <- runMachine emptyMemory . brainfuck $ optimize xs
-            putStrLn $ map fromCell out
+            putStrLn $ fromCell <$> out
             debug mem
   where
     parse ["-h"] = usage   >> exit
