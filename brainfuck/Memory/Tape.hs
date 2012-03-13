@@ -2,36 +2,27 @@ module Memory.Tape where
 
 import Memory
 
-data Tape a = Tape     a [a] [a]
-            | Infinite a [a] [a]
+data Tape a = Tape Bool a [a] [a]
     deriving (Show, Read)
 
 emptyTape :: Bool -> a -> Tape a
-emptyTape False d = Tape     d [] []
-emptyTape True  d = Infinite d [] []
+emptyTape i d = Tape i d [] []
 
 instance Memory Tape where
-    shift L = left
-    shift R = right
+    shift L (Tape i d l r) = uncurry (Tape i d) $! left i d l r
+    shift R (Tape i d l r) = uncurry (Tape i d) $! right  d l r
 
-    value (Tape     d l []    ) = d
-    value (Tape     d l (r:rs)) = r
-    value (Infinite d l []    ) = d
-    value (Infinite d l (r:rs)) = r
+    value (Tape _ d _ []   ) = d
+    value (Tape _ _ _ (r:_)) = r
 
-    alter f (Tape     d l []    ) = Tape     d l [f d]
-    alter f (Tape     d l (r:rs)) = Tape     d l (f r:rs)
-    alter f (Infinite d l []    ) = Infinite d l [f d]
-    alter f (Infinite d l (r:rs)) = Infinite d l (f r:rs)
+    alter f (Tape i d l []    ) = Tape i d l $! [f d]
+    alter f (Tape i d l (r:rs)) = Tape i d l $! (f r : rs)
 
-right :: Tape a -> Tape a
-right (Tape     d l []    ) = Tape     d (d:l) []
-right (Tape     d l (r:rs)) = Tape     d (r:l) rs
-right (Infinite d l []    ) = Infinite d (d:l) []
-right (Infinite d l (r:rs)) = Infinite d (r:l) rs
+left :: Bool -> a -> [a] -> [a] -> ([a], [a])
+left _     _ (l : ls) r = (ls, l : r)
+left True  d []       r = ([], d : r)
+left False _ []       r = ([], r)
 
-left :: Tape a -> Tape a
-left (Tape     d []     r) = Tape     d [] r
-left (Tape     d (l:ls) r) = Tape     d ls (l:r)
-left (Infinite d []     r) = Infinite d [] (d:r)
-left (Infinite d (l:ls) r) = Infinite d ls (l:r)
+right :: a -> [a] -> [a] -> ([a], [a])
+right d l []       = (d : l, [])
+right _ l (r : rs) = (r : l, rs)
