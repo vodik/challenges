@@ -1,4 +1,7 @@
-module Memory.Tape where
+module Memory.Tape
+    ( Tape (..)
+    , emptyTape
+    ) where
 
 import Memory
 
@@ -12,11 +15,11 @@ instance Memory Tape where
     shift L (Tape i d l r) = uncurry (Tape i d) $! left i d l r
     shift R (Tape i d l r) = uncurry (Tape i d) $! right  d l r
 
-    value (Tape _ d _ []   ) = d
-    value (Tape _ _ _ (r:_)) = r
+    value (Tape _ d _ []     ) = d
+    value (Tape _ _ _ (r : _)) = r
 
-    alter f (Tape i d l []    ) = Tape i d l $! [f d]
-    alter f (Tape i d l (r:rs)) = Tape i d l $! (f r : rs)
+    alter f (Tape i d l []      ) = Tape i d l [f d]
+    alter f (Tape i d l (r : rs)) = Tape i d l $! (f r : rs)
 
 left :: Bool -> a -> [a] -> [a] -> ([a], [a])
 left _     _ (l : ls) r = (ls, l : r)

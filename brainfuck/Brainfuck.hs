@@ -40,23 +40,22 @@ getInput = do
         Left (SomeException _) -> return 0
         Right c                -> return $ toCell c
 
-eval :: (Memory t, Num c, Eq c) => Char -> Int -> Operation t c
-eval '>' n = shift R n
-eval '<' n = shift L n
-eval '+' n = alter $ incCell n
-eval '-' n = alter $ decCell n
-eval '.' n = output >*> n
-eval ',' 1 = io getInput >>= store
-eval ',' n = io getChar  >*> (n - 1) >> eval ',' 1
+op :: (Memory t, Num c, Eq c) => Char -> Int -> Operation t c
+op '>' n = shift R n
+op '<' n = shift L n
+op '+' n = alter $ incCell n
+op '-' n = alter $ decCell n
+op '.' n = output >*> n
+op ',' 1 = io getInput >>= store
+op ',' n = io getChar  >*> (n - 1) >> op ',' 1
+
+eval :: (Memory t, Num c, Eq c) => Op -> Operation t c
+eval (Op    x) = op x 1
+eval (OpN n x) = op x n
+eval (Loop  l) = let loop = brainfuck l >> whenValue loop in whenValue loop
 
 brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
-brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
-brainfuck (OpN n x:xs) = eval x n >> brainfuck xs
-brainfuck (Loop  l:xs) = loop l   >> brainfuck xs
-brainfuck []           = return ()
-
-loop :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
-loop xs = let l = brainfuck xs >> whenValue l in whenValue l
+brainfuck = mapM_ eval
 
 main :: IO ()
 main = getArgs >>= parse >>= \code ->

@@ -1,4 +1,7 @@
-module Memory.Sparse where
+module Memory.Sparse
+    ( Sparse (..)
+    , emptySparse
+    ) where
 
 import Control.Monad
 import Data.Map (Map)
