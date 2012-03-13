@@ -33,12 +33,8 @@ incCell = (+) . fromIntegral
 decCell :: Num c => Int -> c -> c
 decCell = subtract . fromIntegral
 
-getInput :: Num c => IO c
-getInput = do
-    input <- try getChar
-    case input of
-        Left (SomeException _) -> return 0
-        Right c                -> return $ toCell c
+safeChar :: Num c => IO c
+safeChar = either (\(SomeException _) -> 0) toCell <$> try getChar
 
 op :: (Memory t, Num c, Eq c) => Char -> Int -> Operation t c
 op '>' n = shift R n
@@ -46,7 +42,7 @@ op '<' n = shift L n
 op '+' n = alter $ incCell n
 op '-' n = alter $ decCell n
 op '.' n = output >*> n
-op ',' 1 = io getInput >>= store
+op ',' 1 = io safeChar >>= store
 op ',' n = io getChar  >*> (n - 1) >> op ',' 1
 
 eval :: (Memory t, Num c, Eq c) => Op -> Operation t c
@@ -64,21 +60,17 @@ run code = do
     debug mem
 
 main :: IO ()
-main = getArgs >>= parse >>= \code -> do
-    case parseBrainfuck code of
-        Left err   -> debug err
-        Right code -> run code
+main = getArgs >>= parse >>= either debug run . parseBrainfuck
   where
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
-    parse [fs]   = readFile fs
+    parse [file] = readFile file
     parse []     = readLines
     parse _      = usage   >> exit
 
     usage   = putStrLn "Usage: bf [-vh] [file]"
     version = putStrLn "Brainfuck 0.1"
     exit    = exitSuccess
-    die     = exitWith $ ExitFailure 1
 
 sparseMemory :: Sparse Cell
 sparseMemory = emptySparse 0
