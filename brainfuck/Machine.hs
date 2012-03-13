@@ -8,7 +8,7 @@ module Machine
     , execMachine
     , shift, output
     , alter, value, store
-    , whenValue, (>*>)
+    , whenValue, (>*>), (>*)
     ) where
 
 import Control.Applicative
@@ -29,7 +29,7 @@ execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
 shift :: Memory t => Direction -> Int -> Machine t c ()
-shift d = modify . (`run` M.shift d)
+shift d = modify . (M.shift d >*)
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return
@@ -46,9 +46,9 @@ store = alter . const
 whenValue :: (Memory t, Eq c, Num c) => Machine t c () -> Machine t c ()
 whenValue f = value >>= \v -> when (v /= 0) f
 
-infix >*>
+infix >*>, >*
 (>*>) :: Monad m => m a -> Int -> m ()
 (>*>) = flip replicateM_
 
-run :: Int -> (a -> a) -> a -> a
-run n f = foldr (.) id $ replicate n f
+(>*) :: (a -> a) -> Int -> a -> a
+f >* n = foldr (.) id $ replicate n f

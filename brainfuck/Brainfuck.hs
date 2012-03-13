@@ -57,14 +57,17 @@ eval (Loop  l) = let loop = brainfuck l >> whenValue loop in whenValue loop
 brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
 brainfuck = mapM_ eval
 
+run :: [Op] -> IO ()
+run code = do
+    (out, mem) <- runMachine emptyMemory . brainfuck $ optimize code
+    putStrLn $ fromCell <$> out
+    debug mem
+
 main :: IO ()
-main = getArgs >>= parse >>= \code ->
+main = getArgs >>= parse >>= \code -> do
     case parseBrainfuck code of
-        Left err -> debug err
-        Right xs -> do
-            (out, mem) <- runMachine emptyMemory . brainfuck $ optimize xs
-            putStrLn $ fromCell <$> out
-            debug mem
+        Left err   -> debug err
+        Right code -> run code
   where
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
