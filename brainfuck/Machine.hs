@@ -31,8 +31,8 @@ execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
 shift :: Memory t => Direction -> Int -> Machine t c ()
-shift L n = modify $ run n M.left
-shift R n = modify $ run n M.right
+shift L = modify . flip run M.left
+shift R = modify . flip run M.right
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return

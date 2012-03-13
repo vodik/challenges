@@ -46,7 +46,8 @@ eval '<' n = shift L n
 eval '+' n = alter $ incCell n
 eval '-' n = alter $ decCell n
 eval '.' n = output >*> n
-eval ',' _ = io getInput >>= store
+eval ',' 1 = io getInput >>= store
+eval ',' n = io getChar  >*> (n - 1) >> eval ',' 1
 
 brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
 brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
