@@ -11,8 +11,6 @@ import Data.Word
 import System.Environment
 import System.Exit
 import System.IO
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as B8
 
 import Machine
 import Brainfuck.Parser
@@ -22,24 +20,30 @@ import Memory.Sparse
 
 type Operation t c = Machine t c ()
 
+toCell :: Num c => Char -> c
+toCell = fromIntegral . ord
+
+fromCell :: Integral c => c -> Char
+fromCell = chr . fromIntegral
+
+incCell :: Num c => Int -> c -> c
+incCell = (+) . fromIntegral
+
+decCell :: Num c => Int -> c -> c
+decCell = subtract . fromIntegral
+
 getInput :: Num c => IO c
 getInput = do
     input <- try getChar
     case input of
         Left (SomeException _) -> return 0
-        Right c                -> return . fromIntegral $ ord c
-
-incWord :: Num c => Int -> c -> c
-incWord = (+) . fromIntegral
-
-decWord :: Num c => Int -> c -> c
-decWord = subtract . fromIntegral
+        Right c                -> return $ toCell c
 
 eval :: (Memory t, Num c, Eq c) => Char -> Int -> Operation t c
-eval '>' n = shiftRight >*> n
-eval '<' n = shiftLeft  >*> n
-eval '+' n = alter $ incWord n
-eval '-' n = alter $ decWord n
+eval '>' n = shift R n
+eval '<' n = shift L n
+eval '+' n = alter $ incCell n
+eval '-' n = alter $ decCell n
 eval '.' n = output >*> n
 eval ',' _ = io getInput >>= store
 
@@ -58,7 +62,7 @@ main = getArgs >>= parse >>= \code ->
         Left err -> debug err
         Right xs -> do
             (out, mem) <- runMachine emptyMemory . brainfuck $ optimize xs
-            B8.putStrLn $ BS.pack out
+            putStrLn $ map fromCell out
             debug mem
   where
     parse ["-h"] = usage   >> exit

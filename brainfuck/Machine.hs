@@ -3,9 +3,10 @@
 module Machine
     ( Memory
     , Machine (..)
+    , Direction (..)
     , runMachine
     , execMachine
-    , shiftLeft, shiftRight, output
+    , shift, output
     , alter, value, store
     , whenValue, (>*>)
     ) where
@@ -18,6 +19,8 @@ import Control.Monad.Writer.Strict
 import Memory (Memory)
 import qualified Memory as M
 
+data Direction = L | R
+
 newtype Machine t c a = Machine (WriterT [c] (StateT (t c) IO) a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [c], MonadState (t c))
 
@@ -27,11 +30,9 @@ runMachine mem (Machine a) = runStateT (execWriterT a) mem
 execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
-shiftLeft :: Memory t => Machine t c ()
-shiftLeft = modify M.left
-
-shiftRight :: Memory t => Machine t c ()
-shiftRight = modify M.right
+shift :: Memory t => Direction -> Int -> Machine t c ()
+shift L = modify . run M.left
+shift R = modify . run M.right
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return
@@ -51,3 +52,7 @@ whenValue f = value >>= \v -> when (v /= 0) f
 infix >*>
 (>*>) :: Monad m => m a -> Int -> m ()
 (>*>) = flip replicateM_
+
+run :: (a -> a) -> Int -> a -> a
+run f 0 = id
+run f n = foldr1 (.) (replicate n f)
