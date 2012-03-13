@@ -20,24 +20,22 @@ import Brainfuck.Optimizer
 import Memory.Tape
 import Memory.Sparse
 
-type Cell = Word8
-type BFMachine t = Machine t Cell
-type Operation t = BFMachine t ()
+type Operation t c = Machine t c ()
 
-getInput :: IO Cell
+getInput :: Num c => IO c
 getInput = do
     input <- try getChar
     case input of
         Left (SomeException _) -> return 0
-        Right c                -> return . toEnum $ ord c
+        Right c                -> return . fromIntegral $ ord c
 
-incWord :: Int -> Cell -> Cell
-incWord = (+) . toEnum
+incWord :: Num c => Int -> c -> c
+incWord = (+) . fromIntegral
 
-decWord :: Int -> Cell -> Cell
-decWord = subtract . toEnum
+decWord :: Num c => Int -> c -> c
+decWord = subtract . fromIntegral
 
-eval :: Memory t => Char -> Int -> Operation t
+eval :: (Memory t, Num c, Eq c) => Char -> Int -> Operation t c
 eval '>' n = shiftRight >*> n
 eval '<' n = shiftLeft  >*> n
 eval '+' n = alter $ incWord n
@@ -45,13 +43,13 @@ eval '-' n = alter $ decWord n
 eval '.' n = output >*> n
 eval ',' _ = io getInput >>= store
 
-brainfuck :: Memory t => [Op] -> Operation t
+brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
 brainfuck (Op    x:xs) = eval x 1 >> brainfuck xs
 brainfuck (OpN n x:xs) = eval x n >> brainfuck xs
 brainfuck (Loop  l:xs) = loop l   >> brainfuck xs
 brainfuck []           = return ()
 
-loop :: Memory t => [Op] -> Operation t
+loop :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
 loop xs = let l = brainfuck xs >> whenValue l in whenValue l
 
 main :: IO ()
@@ -74,10 +72,10 @@ main = getArgs >>= parse >>= \code ->
     exit    = exitSuccess
     die     = exitWith $ ExitFailure 1
 
-sparseMemory :: Sparse Cell
+sparseMemory :: Num c => Sparse c
 sparseMemory = emptySparse 0
 
-emptyMemory :: Tape Cell
+emptyMemory :: Num c => Tape c
 emptyMemory = emptyTape False 0
 
 debug :: Show a => a -> IO ()
