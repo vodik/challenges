@@ -4,7 +4,7 @@ import Brainfuck.Parser
 
 compress :: [Op] -> [Op]
 compress (Loop l:xs) = Loop (compress l) : compress xs
-compress (op:xs)     = let (l, r) = break (/= op) xs in merge l op : compress r
+compress (op:xs)     = let (l, r) = span (== op) xs in merge l op : compress r
 compress []          = []
 
 merge :: [Op] -> Op -> Op
