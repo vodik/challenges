@@ -2,10 +2,10 @@
 
 module Machine
     ( Memory
-    , Machine (..)
+    , MachineT (..)
     , Direction (..)
-    , runMachine
-    , execMachine
+    , runMachineT, runMachine
+    , execMachineT, execMachine
     , shift, output
     , alter, value, store
     , whenValue, (>*>)
@@ -13,40 +13,52 @@ module Machine
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Writer.Strict
 
 import Memory (Memory, Direction (..))
 import qualified Memory as M
 
-newtype Machine t c a =
-    Machine { unMachine :: WriterT [c] (StateT (t c) IO) a }
+newtype MachineT t c m a =
+    MachineT { unMachineT :: WriterT [c] (StateT (t c) m) a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [c], MonadState (t c))
 
-runMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO ([c], t c)
-runMachine mem = (`runStateT` mem) . execWriterT . unMachine
+type Machine t c = MachineT t c Identity
 
-execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
-execMachine mem = (fst <$>) . runMachine mem
+instance MonadTrans (MachineT t c) where
+    lift = MachineT . lift . lift
 
-shift :: Memory t => Direction -> Int -> Machine t c ()
+runMachineT :: (Functor m, Monad m, Memory t, Num c) => t c -> MachineT t c m a -> m ([c], t c)
+runMachineT mem = (`runStateT` mem) . execWriterT . unMachineT
+
+runMachine :: (Memory t, Num c) => t c -> Machine t c a -> ([c], t c)
+runMachine mem = runIdentity . runMachineT mem
+
+execMachineT :: (Functor m, Monad m, Memory t, Num c) => t c -> MachineT t c m a -> m [c]
+execMachineT mem = (fst <$>) . runMachineT mem
+
+execMachine :: (Memory t, Num c) => t c -> Machine t c a -> [c]
+execMachine mem = fst . runMachine mem
+
+shift :: (Functor m, Monad m, Memory t) => Direction -> Int -> MachineT t c m ()
 shift d n = do
     mem <- get
     put $! M.shift d >* n $ mem
 
-output :: (Memory t, Num c) => Machine t c ()
+output :: (Functor m, Monad m, Memory t, Num c) => MachineT t c m ()
 output = value >>= tell . return
 
-alter :: (Memory t, Eq c, Num c) => (c -> c) -> Machine t c ()
+alter :: (Functor m, Monad m, Memory t, Eq c, Num c) => (c -> c) -> MachineT t c m ()
 alter = modify . M.alter
 
-value :: (Memory t, Num c) => Machine t c c
+value :: (Functor m, Monad m, Memory t, Num c) => MachineT t c m c
 value = M.value <$> get
 
-store :: (Memory t, Eq c, Num c) => c -> Machine t c ()
+store :: (Functor m, Monad m, Memory t, Eq c, Num c) => c -> MachineT t c m ()
 store = alter . const
 
-whenValue :: (Memory t, Eq c, Num c) => Machine t c () -> Machine t c ()
+whenValue :: (Functor m, Monad m, Memory t, Eq c, Num c) => MachineT t c m () -> MachineT t c m ()
 whenValue f = value >>= \v -> when (v /= 0) f
 
 infix >*>, >*

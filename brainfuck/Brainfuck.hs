@@ -19,7 +19,7 @@ import Memory.Sequence
 import Memory.Sparse
 
 type Cell = Word8
-type Operation t c = Machine t c ()
+type Operation t c = MachineT t c IO ()
 
 toCell :: Num c => Char -> c
 toCell = fromIntegral . ord
@@ -55,7 +55,7 @@ brainfuck = foldl1 (>>) . fmap eval
 
 run :: [Op] -> IO ()
 run code = do
-    (out, mem) <- runMachine emptyMemory . brainfuck $ optimize code
+    (out, mem) <- runMachineT emptyMemory . brainfuck $ optimize code
     putStrLn $ fromCell <$> out
     debug mem
 
