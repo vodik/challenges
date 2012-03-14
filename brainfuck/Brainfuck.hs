@@ -4,8 +4,7 @@ import Prelude hiding (catch)
 import Control.Applicative
 import Control.Exception
 import Control.Monad
-import Control.Monad.State
-import Control.Monad.Writer
+import Control.Monad.IO.Class
 import Data.Char
 import Data.Word
 import System.Environment
@@ -51,7 +50,7 @@ eval (OpN n x) = op x n
 eval (Loop  l) = let loop = brainfuck l >> whenValue loop in whenValue loop
 
 brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
-brainfuck = mapM_ eval
+brainfuck = foldl1 (>>) . map eval
 
 run :: [Op] -> IO ()
 run code = do
@@ -68,7 +67,7 @@ main = getArgs >>= parse >>= either debug run . parseBrainfuck
     parse []     = readLines
     parse _      = usage   >> exit
 
-    usage   = putStrLn "Usage: bf [-vh] [file]"
+    usage   = getProgName >>= \name -> putStrLn $ join [ "Usage: ", name, " [-vh] [file]" ]
     version = putStrLn "Brainfuck 0.1"
     exit    = exitSuccess
 
