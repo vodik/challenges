@@ -1,4 +1,7 @@
-module Memory where
+module Memory
+    ( Memory (..)
+    , Direction (..)
+    ) where
 
 data Direction = L | R
 

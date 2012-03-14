@@ -8,7 +8,7 @@ module Machine
     , execMachine
     , shift, output
     , alter, value, store
-    , whenValue, (>*>), (>*)
+    , whenValue, (>*>)
     ) where
 
 import Control.Applicative
