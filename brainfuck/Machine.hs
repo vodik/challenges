@@ -19,11 +19,12 @@ import Control.Monad.Writer.Strict
 import Memory (Memory, Direction (..))
 import qualified Memory as M
 
-newtype Machine t c a = Machine (WriterT [c] (StateT (t c) IO) a)
+newtype Machine t c a =
+    Machine { unMachine :: WriterT [c] (StateT (t c) IO) a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadWriter [c], MonadState (t c))
 
 runMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO ([c], t c)
-runMachine mem (Machine a) = runStateT (execWriterT a) mem
+runMachine mem = (`runStateT` mem) . execWriterT . unMachine
 
 execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem

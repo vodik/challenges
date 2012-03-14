@@ -18,8 +18,8 @@ instance Memory Tape where
     value (Tape _ d _ []     ) = d
     value (Tape _ _ _ (r : _)) = r
 
-    alter f (Tape i d l []      ) = f d `seq` Tape i d l [f d]
-    alter f (Tape i d l (r : rs)) = f r `seq` Tape i d l $! (f r : rs)
+    alter f (Tape i d l []      ) = Tape i d l [f d]
+    alter f (Tape i d l (r : rs)) = Tape i d l $! (f r : rs)
 
 left :: Bool -> a -> [a] -> [a] -> ([a], [a])
 left _     _ (l : ls) r = (ls, l : r)

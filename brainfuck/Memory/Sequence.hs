@@ -22,8 +22,8 @@ instance Memory Sequence where
     value (Sequence _ _ _ (viewl -> r :< _)) = r
     value (Sequence _ d _ (viewl -> EmptyL)) = d
 
-    alter f (Sequence i d l (viewl -> r :< rs)) = f r `seq` Sequence i d l $! f r <| rs
-    alter f (Sequence i d l (viewl -> EmptyL )) = f d `seq` Sequence i d l $! S.singleton (f d)
+    alter f (Sequence i d l (viewl -> r :< rs)) = Sequence i d l $! f r <| rs
+    alter f (Sequence i d l (viewl -> EmptyL )) = Sequence i d l $! S.singleton (f d)
 
 left :: Bool -> a -> Seq a -> Seq a -> (Seq a, Seq a)
 left _     _ (viewl -> l :< ls) r = (ls,      l <| r)
