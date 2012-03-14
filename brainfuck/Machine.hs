@@ -29,7 +29,9 @@ execMachine :: (Memory t, Num c) => t c -> Machine t c a -> IO [c]
 execMachine mem = (fst <$>) . runMachine mem
 
 shift :: Memory t => Direction -> Int -> Machine t c ()
-shift d = modify . (M.shift d >*)
+shift d n = do
+    mem <- get
+    put $! M.shift d >* n $ mem
 
 output :: (Memory t, Num c) => Machine t c ()
 output = value >>= tell . return
@@ -51,4 +53,4 @@ infix >*>, >*
 (>*>) = flip replicateM_
 
 (>*) :: (a -> a) -> Int -> a -> a
-f >* n = foldr (.) id $ replicate n f
+f >* n = foldl1 (.) $ replicate n f

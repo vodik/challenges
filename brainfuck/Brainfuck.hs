@@ -50,7 +50,7 @@ eval (OpN n x) = op x n
 eval (Loop  l) = let loop = brainfuck l >> whenValue loop in whenValue loop
 
 brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation t c
-brainfuck = foldl1 (>>) . map eval
+brainfuck = foldl1 (>>) . fmap eval
 
 run :: [Op] -> IO ()
 run code = do
