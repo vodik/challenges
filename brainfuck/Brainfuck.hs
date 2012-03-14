@@ -15,6 +15,7 @@ import Machine
 import Brainfuck.Parser
 import Brainfuck.Optimizer
 import Memory.Tape
+import Memory.Sequence
 import Memory.Sparse
 
 type Cell = Word8
@@ -73,6 +74,9 @@ main = getArgs >>= parse >>= either debug run . parseBrainfuck
 
 sparseMemory :: Sparse Cell
 sparseMemory = emptySparse 0
+
+seqMemory :: Sequence Cell
+seqMemory = emptySequence False 0
 
 emptyMemory :: Tape Cell
 emptyMemory = emptyTape False 0
