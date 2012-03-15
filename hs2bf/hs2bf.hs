@@ -20,7 +20,7 @@ cmd c = tell . return . (`Op` c)
 loop  = censor $ return . Loop
 
 goto (Cell new) = do
-    pos <- subtract new <$> gets position
+    pos <- gets (subtract new . position)
     when (pos /= 0) $ do
         if pos > 0
             then cmd '<' pos

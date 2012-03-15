@@ -41,7 +41,7 @@ alter :: (Memory t, Eq c, Num c) => (c -> c) -> Machine t c ()
 alter = modify . M.alter
 
 value :: (Memory t, Num c) => Machine t c c
-value = M.value <$> get
+value = gets M.value
 
 store :: (Memory t, Eq c, Num c) => c -> Machine t c ()
 store = alter . const
