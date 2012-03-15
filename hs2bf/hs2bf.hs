@@ -34,59 +34,54 @@ goto (Cell new) = do
             else cmd '>' $ abs pos
         modify $ \mem -> mem { position = new }
 
-output x = goto x >> raw "."
-input  x = goto x >> raw ","
-zero   x = goto x >> loop (raw "-")
+output x   = goto x >> raw "."
+input  x   = goto x >> raw ","
+inc    x n = goto x >> cmd '+' n
+dec    x n = goto x >> cmd '-' n
+zero   x   = goto x >> loop (raw "-")
+while  x f = goto x >> loop (f >> dec x 1)
 
-inc   x n = goto x >> cmd '+' n
-dec   x n = goto x >> cmd '-' n
-while x f = goto x >> loop (f >> dec x 1)
+moveTo x y = while x $ inc y 1
+copyTo x y = times x $ inc y 1
 
 cell = do
     free <- gets nextFree
     modify $ \mem -> mem { nextFree = free + 1 }
 
-    let c = Cell free
+    let c     = Cell free
         dirty = False
 
     when dirty $ zero c
     return c
 
-moveTo x y = while x $ inc y 1
-copyTo x y = do
-    t <- cell
-    while x $ do
-        inc t 1
-        inc y 1
-    t `moveTo` x
+temp  f = cell >>= f
+store v = cell >>= \y -> inc y v    >> return y
+copy  x = cell >>= \y -> copyTo x y >> return y
+io      = cell >>= \y -> input y    >> return y
 
--- modify x y = do
---     t <- tmp
---     while y $ do
---        inc x
---        inc t
---     while t $ inc y
+add x y = copy x >>= \c -> y `times` (inc c 1) >> return c
+sub x y = copy x >>= \c -> y `times` (dec c 1) >> return c
 
--- x `assign` y = zero x >> x `add` y
+times x f = temp $ \t -> while x (f >> inc t 1) >> moveTo t x
 
--- add = modify
+f <?> c = comment c >> f
 
 emptyMem = Memory 0 0
 
 render :: [Op] -> String
 render = foldr toC mempty
   where
-    toC (Op n x) xs = join [ replicate n x, xs ]
-    toC (Loop x) xs = '[' : join [ render x, ']' : xs ]
-    toC (Comment str) xs = '\n' : join [ str, "\n", xs ]
+    toC (Op n    x) xs =        join [ replicate n x,   xs ]
+    toC (Loop    x) xs = '['  : join [ render x,  ']' : xs ]
+    toC (Comment c) xs = '\n' : join [ c,        '\n' : xs ]
+
+printAll arr = mapM_ output arr
 
 program = (`evalState` emptyMem) . execWriterT $ do
-    v1 <- cell
-    v2 <- cell
-    comment "Hello World"
-    input v1
-    v1 `copyTo` v2
-    output v1
-    output v2
+    v1 <- io
+    v2 <- io
+    v3 <- v1 `sub` v2       <?> "Subtract two values from each other"
+    inc v3 (ord '0')        <?> "Convert num to ascii"
+    printAll [ v1, v2, v3 ] <?> "Output all values"
 
 main = putStrLn $ render program
