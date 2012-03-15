@@ -4,7 +4,9 @@ import Control.Monad.State
 import Control.Monad.Writer.Strict
 
 data Memory = Memory
-    { position :: Int }
+    { position :: Int
+    , nextFree :: Int
+    }
 
 data Op = Op Int Char
         | Loop [Op]
@@ -20,7 +22,7 @@ cmd c = tell . return . (`Op` c)
 loop  = censor $ return . Loop
 
 goto (Cell new) = do
-    pos <- gets (subtract new . position)
+    pos <- gets $ subtract new . position
     when (pos /= 0) $ do
         if pos > 0
             then cmd '<' pos
@@ -34,6 +36,16 @@ inc   x n = goto x >> cmd '+' n
 dec   x n = goto x >> cmd '-' n
 while x f = goto x >> loop (f >> dec x 1)
 
+cell = do
+    free <- gets nextFree
+    modify $ \mem -> mem { nextFree = free + 1 }
+
+    let c = Cell free
+        dirty = False
+
+    when dirty $ zero c
+    return c
+
 -- modify x y = do
 --     t <- tmp
 --     while y $ do
@@ -46,7 +58,7 @@ while x f = goto x >> loop (f >> dec x 1)
 
 -- add = modify
 
-emptyMem = Memory 0
+emptyMem = Memory 0 0
 
 render :: [Op] -> String
 render = foldr toC mempty
@@ -54,15 +66,13 @@ render = foldr toC mempty
     toC (Op n x) xs = join [ replicate n x, xs ]
     toC (Loop x) xs = '[' : join [ render x, ']' : xs ]
 
-main = do
-    x <- (`evalStateT` emptyMem) . execWriterT $ do
-        let a = Cell 4; b = Cell 9; c = Cell 8
-        zero a
-        zero b
-        zero c
+program = (`evalState` emptyMem) . execWriterT $ do
+    a <- cell
+    b <- cell
+    c <- cell
+    mapM_ output [ a, b, c ]
+    while b $ do
+        inc c 3
         output c
-        output a
-        while b $ do
-            inc c 3
-            output c
-    putStrLn $ render x
+
+main = putStrLn $ render program
