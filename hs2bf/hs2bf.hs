@@ -1,3 +1,4 @@
+import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 
@@ -13,19 +14,17 @@ type Index = Int
 data Cell = Cell Index
           deriving (Read, Show)
 
-raw  = tell . fmap (Op 1)
-loop = censor $ return . Loop
+raw   = tell . fmap (Op 1)
+cmd c = tell . return . (`Op` c)
+loop  = censor $ return . Loop
 
 goto (Cell new) = do
     pos <- gets position
     case pos - new of
-        x | x > 0 -> left x
-          | x < 0 -> right $ abs x
-          | otherwise -> return ()
+        0 -> return ()
+        x | x > 0 -> cmd '<' x
+          | x < 0 -> cmd '>' $ abs x
     modify $ \mem -> mem { position = new }
-  where
-    left  = tell . return . flip Op '<'
-    right = tell . return . flip Op '>'
 
 output x = goto x >> raw "."
 zero   x = goto x >> reset
@@ -48,10 +47,10 @@ reset    = loop $ raw "-"
 emptyMem = Memory 0
 
 render :: [Op] -> String
-render code = foldr toC "" code
+render = foldr toC mempty
   where
-    toC (Op n x) xs = replicate n x ++ xs
-    toC (Loop x) xs = '[' : render x ++ "]" ++ xs
+    toC (Op n x) xs = join [ replicate n x, xs ]
+    toC (Loop x) xs = '[' : join [ render x, ']' : xs ]
 
 main = do
     x <- (`evalStateT` emptyMem) . execWriterT $ do
@@ -68,3 +67,5 @@ main = do
 
     putStrLn "DONE..."
     putStrLn $ render x
+
+(.:) = (.) . (.)
