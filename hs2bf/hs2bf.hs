@@ -52,7 +52,13 @@ cell = do
     when dirty $ zero c
     return c
 
-x >-> y = while x $ inc y 1
+moveTo x y = while x $ inc y 1
+copyTo x y = do
+    t <- cell
+    while x $ do
+        inc t 1
+        inc y 1
+    t `moveTo` x
 
 -- modify x y = do
 --     t <- tmp
@@ -75,26 +81,12 @@ render = foldr toC mempty
     toC (Comment str) xs = '\n' : join [ str, "\n", xs ]
 
 program = (`evalState` emptyMem) . execWriterT $ do
-    a <- cell
-    b <- cell
-    c <- cell
-    d <- cell
-    e <- cell
-    comment "input:"
-    input a
-    input d
-    comment "copy:"
-    while a $ do
-        inc b 1
-        inc c 1
-    comment "prefix:"
-    output b
-    inc e $ ord ':'
-    output e
-    comment "replicate:"
-    dec c $ ord '0'
-    while c $ do
-        output d
-        inc d 1
+    v1 <- cell
+    v2 <- cell
+    comment "Hello World"
+    input v1
+    v1 `copyTo` v2
+    output v1
+    output v2
 
 main = putStrLn $ render program
