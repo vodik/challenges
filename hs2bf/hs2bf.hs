@@ -1,7 +1,7 @@
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
-import Control.Monad.Writer.Strict
+import Control.Monad.Writer
 import Data.Char
 
 data Memory = Memory
@@ -54,7 +54,9 @@ cell = do
     when dirty $ zero c
     return c
 
-temp  f = cell >>= f
+-- TODO: don't hardcode this
+temp f = return (Cell 3) >>= \c -> zero c >> f c
+
 store v = cell >>= \y -> inc y v    >> return y
 copy  x = cell >>= \y -> copyTo x y >> return y
 io      = cell >>= \y -> input y    >> return y
@@ -68,12 +70,15 @@ f <?> c = comment c >> f
 
 emptyMem = Memory 0 0
 
+wrap :: String -> String -> String -> String
+wrap a b = (a ++) . (++ b)
+
 render :: [Op] -> String
-render = foldr toC mempty
+render = (>>= toC)
   where
-    toC (Op n    x) xs =        join [ replicate n x,   xs ]
-    toC (Loop    x) xs = '['  : join [ render x,  ']' : xs ]
-    toC (Comment c) xs = '\n' : join [ c,        '\n' : xs ]
+    toC (Op n    x) = replicate n x
+    toC (Loop    x) = wrap "["   "]" $ render x
+    toC (Comment c) = wrap "\n" "\n" c
 
 printAll arr = mapM_ output arr
 
