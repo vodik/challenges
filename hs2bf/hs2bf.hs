@@ -1,55 +1,70 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import Control.Monad.State
+import Control.Monad.Writer
 
-import Control.Applicative
-import Control.Monad.Writer.Strict
+data Memory = Memory
+    { position :: Int }
 
-newtype Gen a = Gen { unGen :: Writer [String] a }
-    deriving (Functor, Applicative, Monad, MonadWriter [String])
+data Op = Op Int Char
+        | Loop [Op]
+        deriving (Read, Show)
 
-data Cell a = Cell { value :: a }
-    deriving (Read, Show)
+type Index = Int
 
-instance Num a => Num (Cell a) where
-    (Cell x) + (Cell y) = Cell $ x + y
-    (Cell x) * (Cell y) = Cell $ x * y
-    abs         = Cell . abs . value
-    signum      = Cell . signum . value
-    fromInteger = Cell . fromInteger
-
-data Op a = Cell a :+ Cell a
-          | Cell a :- Cell a
+data Cell = Cell Index
           deriving (Read, Show)
 
-data Command = Command String
+raw  = tell . fmap (Op 1)
+loop = censor $ return . Loop
 
-(-->) :: (Show a, Num a) => Op a -> Cell a -> Gen ()
-(x :+ y) --> cell = cell `assign` value (x + y)
-(x :- y) --> cell = cell `assign` value (x - y)
-
-assign :: (Show a, Num a) => Cell a -> a -> Gen ()
-assign cell value = do
-    tell $ return msg
+goto (Cell new) = do
+    pos <- gets position
+    case pos - new of
+        x | x > 0 -> left x
+          | x < 0 -> right $ abs x
+          | otherwise -> return ()
+    modify $ \mem -> mem { position = new }
   where
-    msg = "Putting " ++ show value ++ " in " ++ show cell
+    left  = tell . return . flip Op '<'
+    right = tell . return . flip Op '>'
 
-output :: (Show a, Num a) => Cell a -> Gen ()
-output cell = do
-    tell $ return msg
+output x = goto x >> raw "."
+zero   x = goto x >> reset
+reset    = loop $ raw "-"
+
+-- while x f = goto x >> loop (f >> dec x)
+
+-- modify x y = do
+--     t <- tmp
+--     while y $ do
+--        inc x
+--        inc t
+--     while t $
+--        inc y
+
+-- x `assign` y = zero x >> x `add` y
+
+-- add = modify
+
+emptyMem = Memory 0
+
+render :: [Op] -> String
+render code = foldr toC "" code
   where
-    msg = "Outputting value: " ++ show (value cell)
+    toC (Op n x) xs = replicate n x ++ xs
+    toC (Loop x) xs = '[' : render x ++ "]" ++ xs
 
-store :: Int -> Gen (Cell Int)
-store n = do
-    tell $ return msg
-    return $ Cell n
-  where
-    msg = "Storing " ++ show n ++ " in a new cell"
+main = do
+    x <- (`evalStateT` emptyMem) . execWriterT $ do
+        -- a <- store 5
+        -- b <- store 9
+        -- a `add` b
+        -- output a
+        --
+        zero (Cell 4)
+        zero (Cell 9)
+        zero (Cell 8)
+        output (Cell 8)
+        output (Cell 4)
 
-brainfuck :: Gen ()
-brainfuck = do
-    a <- store 7
-    b <- store 9
-    a :+ b --> b
-    output b
-
-main = mapM_ putStrLn . execWriter $ unGen brainfuck
+    putStrLn "DONE..."
+    putStrLn $ render x
