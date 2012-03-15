@@ -1,6 +1,7 @@
+import Control.Applicative
 import Control.Monad
 import Control.Monad.State
-import Control.Monad.Writer
+import Control.Monad.Writer.Strict
 
 data Memory = Memory
     { position :: Int }
@@ -19,18 +20,19 @@ cmd c = tell . return . (`Op` c)
 loop  = censor $ return . Loop
 
 goto (Cell new) = do
-    pos <- gets position
-    case pos - new of
-        0 -> return ()
-        x | x > 0 -> cmd '<' x
-          | x < 0 -> cmd '>' $ abs x
-    modify $ \mem -> mem { position = new }
+    pos <- subtract new <$> gets position
+    when (pos /= 0) $ do
+        if pos > 0
+            then cmd '<' pos
+            else cmd '>' $ abs pos
+        modify $ \mem -> mem { position = new }
 
 output x = goto x >> raw "."
-zero   x = goto x >> reset
-reset    = loop $ raw "-"
+zero   x = goto x >> loop (raw "-")
 
-while x f = goto x >> loop (f >> goto x >> raw "-")
+inc   x n = goto x >> cmd '+' n
+dec   x n = goto x >> cmd '-' n
+while x f = goto x >> loop (f >> dec x 1)
 
 -- modify x y = do
 --     t <- tmp
@@ -61,10 +63,6 @@ main = do
         output c
         output a
         while b $ do
+            inc c 3
             output c
-            output a
-
-    putStrLn "DONE..."
     putStrLn $ render x
-
-(.:) = (.) . (.)
