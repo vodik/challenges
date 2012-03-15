@@ -30,7 +30,7 @@ output x = goto x >> raw "."
 zero   x = goto x >> reset
 reset    = loop $ raw "-"
 
--- while x f = goto x >> loop (f >> dec x)
+while x f = goto x >> loop (f >> goto x >> raw "-")
 
 -- modify x y = do
 --     t <- tmp
@@ -60,6 +60,9 @@ main = do
         zero c
         output c
         output a
+        while b $ do
+            output c
+            output a
 
     putStrLn "DONE..."
     putStrLn $ render x
