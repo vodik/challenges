@@ -54,16 +54,12 @@ render = foldr toC mempty
 
 main = do
     x <- (`evalStateT` emptyMem) . execWriterT $ do
-        -- a <- store 5
-        -- b <- store 9
-        -- a `add` b
-        -- output a
-        --
-        zero (Cell 4)
-        zero (Cell 9)
-        zero (Cell 8)
-        output (Cell 8)
-        output (Cell 4)
+        let a = Cell 4; b = Cell 9; c = Cell 8
+        zero a
+        zero b
+        zero c
+        output c
+        output a
 
     putStrLn "DONE..."
     putStrLn $ render x
