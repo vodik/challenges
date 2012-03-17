@@ -28,10 +28,10 @@ fromCell :: Integral c => c -> Char
 fromCell = chr . fromIntegral
 
 incCell :: Num c => Int -> c -> c
-incCell = (+) . fromIntegral
+incCell = flip (+) . fromIntegral
 
 decCell :: Num c => Int -> c -> c
-decCell = subtract . fromIntegral
+decCell = flip (-) . fromIntegral
 
 safeChar :: Num c => IO c
 safeChar = either (\(SomeException _) -> 0) toCell <$> try getChar
