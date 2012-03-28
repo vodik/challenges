@@ -9,7 +9,6 @@ module Machine
     , whenValue, (>*>)
     ) where
 
-import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Identity
@@ -81,10 +80,10 @@ halt = MachineT $ \s -> return $ Halt s (MachineT . const . return $ Result s ()
 modify :: (Monad m, Memory t) => (t w -> t w) -> MachineT w t m ()
 modify f = get >>= put . f
 
-output :: (Memory t, Monad m, Num w) => MachineT w t m ()
+output :: (Monad m, Memory t, Num w) => MachineT w t m ()
 output = value >>= tell
 
-shift :: (Memory t, Monad m) => Direction -> Int -> MachineT w t m ()
+shift :: (Monad m, Memory t) => Direction -> Int -> MachineT w t m ()
 shift d n = do
     mem <- get
     put $! M.shift d >* n $ mem
@@ -92,7 +91,7 @@ shift d n = do
 alter :: (Monad m, Memory t, Eq w, Num w) => (w -> w) -> MachineT w t m ()
 alter = modify . M.alter
 
-value :: (Memory t, Monad m, Num w) => MachineT w t m w
+value :: (Monad m, Memory t, Num w) => MachineT w t m w
 value = gets M.value
 
 store :: (Monad m, Memory t, Eq w, Num w) => w -> MachineT w t m ()

@@ -11,47 +11,47 @@ import System.Environment
 import System.Exit
 import System.IO
 
-import Machine
-import Brainfuck.Parser
 import Brainfuck.Optimizer
+import Brainfuck.Parser
+import Machine
 import Memory.Tape
 import Memory.Sequence
 import Memory.Sparse
 
 type Cell = Word8
-type Operation c t = MachineT c t IO ()
+type Operation w t = MachineT w t IO ()
 
-toCell :: Num c => Char -> c
+toCell :: Num a => Char -> a
 toCell = fromIntegral . ord
 
-fromCell :: Integral c => c -> Char
+fromCell :: Integral a => a -> Char
 fromCell = chr . fromIntegral
 
-incCell :: Num c => Int -> c -> c
+incCell :: Num a => Int -> a -> a
 incCell = flip (+) . fromIntegral
 
-decCell :: Num c => Int -> c -> c
+decCell :: Num a => Int -> a -> a
 decCell = flip (-) . fromIntegral
 
-safeChar :: Num c => IO c
+safeChar :: Num a => IO a
 safeChar = either (\(SomeException _) -> 0) toCell <$> try getChar
 
-op :: (Memory t, Num c, Eq c) => Char -> Int -> Operation c t
+op :: (Memory t, Num w, Eq w) => Char -> Int -> Operation w t
 op '>' n = shift R n
 op '<' n = shift L n
 op '+' n = alter $ incCell n
 op '-' n = alter $ decCell n
 op '.' n = output >*> n
 op ',' 1 = io safeChar >>= store
-op ',' n = io getChar >*> (n - 1) >> op ',' 1
+op ',' n = io getChar >> op ',' (n - 1)
 op '#' n = halt
 
-eval :: (Memory t, Num c, Eq c) => Op -> Operation c t
+eval :: (Memory t, Num w, Eq w) => Op -> Operation w t
 eval (Op    x) = op x 1
 eval (OpN n x) = op x n
 eval (Loop  l) = let loop = brainfuck l >> whenValue loop in whenValue loop
 
-brainfuck :: (Memory t, Num c, Eq c) => [Op] -> Operation c t
+brainfuck :: (Memory t, Num w, Eq w) => [Op] -> Operation w t
 brainfuck = foldl1 (>>) . fmap eval
 
 run :: [Op] -> IO ()
