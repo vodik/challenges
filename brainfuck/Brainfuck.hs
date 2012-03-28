@@ -14,7 +14,6 @@ import System.IO
 import Machine
 import Brainfuck.Parser
 import Brainfuck.Optimizer
-import Memory (Direction (..))
 import Memory.Tape
 import Memory.Sequence
 import Memory.Sparse
