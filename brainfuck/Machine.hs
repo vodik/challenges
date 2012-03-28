@@ -3,7 +3,7 @@ module Machine
     , MachineT (..)
     , Direction (..)
     , State (..)
-    , runMachine, execMachineT
+    , runMachine, execMachine, execMachineT
     , input, output, halt
     , shift, alter, value, store
     , whenValue, (>*>)
@@ -37,9 +37,9 @@ instance Monad m => Monad (MachineT w t m) where
     f >>= g = MachineT $ \s -> do
         rst <- runMachineT f s
         case rst of
-            Result s' a -> runMachineT (g a) s'
-            Input  s' c -> return . Input s' $ \w -> c w >>= g
             Halt   s' c -> return . Halt  s' $ c >>= g
+            Input  s' c -> return . Input s' $ \w -> c w >>= g
+            Result s' a -> runMachineT (g a) s'
 
     fail = MachineT . const . fail
 
@@ -58,9 +58,19 @@ execMachineT t cb i f = run f (State mempty t)
     run f state = do
         rst <- runMachineT f state
         case rst of
-            (Result s result) -> return (out s, mem s)
-            (Input  s cont)   -> i >>= \w -> run (cont w) s
             (Halt   s cont)   -> cb (out s) (mem s) >> run cont s
+            (Input  s cont)   -> i >>= \w -> run (cont w) s
+            (Result s result) -> return (out s, mem s)
+
+execMachine :: Num w => t w -> [w] -> Machine w t a -> ([w], t w)
+execMachine t i f = runIdentity $ run f (i `mappend` repeat 0) (State mempty t)
+  where
+    run f i@(x:xs) state = do
+        rst <- runMachineT f state
+        case rst of
+            (Halt   s cont)   -> run cont i s
+            (Input  s cont)   -> run (cont x) xs s
+            (Result s result) -> return (out s, mem s)
 
 get :: (Memory t, Monad m) => MachineT w t m (t w)
 get = MachineT $ \s -> return $ Result s (mem s)
