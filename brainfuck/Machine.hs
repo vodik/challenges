@@ -3,9 +3,9 @@ module Machine
     , MachineT (..)
     , Direction (..)
     , State (..)
-    , runMachine, execMachineT, execMachine
-    , shift, output, halt
-    , alter, value, store
+    , runMachine, execMachineT
+    , input, output, halt
+    , shift, alter, value, store
     , whenValue, (>*>)
     ) where
 
@@ -20,6 +20,7 @@ import qualified Memory as M
 data State w t = State { out :: [w], mem :: t w }
 
 data Result w t m a = Halt   (State w t) (MachineT w t m a)
+                    | Input  (State w t) (w -> MachineT w t m a)
                     | Result (State w t) a
 
 newtype MachineT w t m a =
@@ -37,7 +38,8 @@ instance Monad m => Monad (MachineT w t m) where
         rst <- runMachineT f s
         case rst of
             Result s' a -> runMachineT (g a) s'
-            Halt   s' c -> return $ Halt s' (c >>= g)
+            Input  s' c -> return . Input s' $ \w -> c w >>= g
+            Halt   s' c -> return . Halt  s' $ c >>= g
 
     fail = MachineT . const . fail
 
@@ -50,17 +52,15 @@ instance MonadIO m => MonadIO (MachineT w t m) where
 runMachine :: MachineT w t Identity a -> State w t -> Result w t Identity a
 runMachine s = runIdentity . runMachineT s
 
-execMachineT :: Monad m => t w -> ([w] -> t w -> m ()) -> MachineT w t m a -> m ([w], t w)
-execMachineT t cb f = run f (State mempty t)
+execMachineT :: Monad m => t w -> ([w] -> t w -> m ()) -> m w -> MachineT w t m a -> m ([w], t w)
+execMachineT t cb i f = run f (State mempty t)
   where
     run f state = do
         rst <- runMachineT f state
         case rst of
             (Result s result) -> return (out s, mem s)
+            (Input  s cont)   -> i >>= \w -> run (cont w) s
             (Halt   s cont)   -> cb (out s) (mem s) >> run cont s
-
-execMachine :: t w -> MachineT w t Identity a -> ([w], t w)
-execMachine t f = runIdentity $ execMachineT t (\_ _ -> return ()) f
 
 get :: (Memory t, Monad m) => MachineT w t m (t w)
 get = MachineT $ \s -> return $ Result s (mem s)
@@ -76,6 +76,9 @@ tell v = MachineT $ \s -> return $ Result (State (out s `mappend` return v) (mem
 
 halt :: Monad m => MachineT w t m ()
 halt = MachineT $ \s -> return $ Halt s (MachineT . const . return $ Result s ())
+
+input :: Monad m => MachineT w t m w
+input = MachineT $ \s -> return $ Input s (MachineT . const . return . Result s)
 
 modify :: (Monad m, Memory t) => (t w -> t w) -> MachineT w t m ()
 modify f = get >>= put . f

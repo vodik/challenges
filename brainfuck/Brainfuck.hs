@@ -42,8 +42,8 @@ op '<' n = shift L n
 op '+' n = alter $ incCell n
 op '-' n = alter $ decCell n
 op '.' n = output >*> n
-op ',' 1 = io safeChar >>= store
-op ',' n = io getChar >> op ',' (n - 1)
+op ',' 1 = input >>= store
+op ',' n = input >> op ',' (n - 1)
 op '#' n = halt
 
 eval :: (Memory t, Num w, Eq w) => Op -> Operation w t
@@ -56,11 +56,11 @@ brainfuck = foldl1 (>>) . fmap eval
 
 run :: [Op] -> IO ()
 run code = do
-    (out, mem) <- execMachineT tapeMemory onHalt . brainfuck $ optimize code
+    (out, mem) <- execMachineT tapeMemory halted safeChar . brainfuck $ optimize code
     putStrLn $ fromCell <$> out
     debug mem
   where
-    onHalt _ mem = putStrLn "HALT!" >> debug mem
+    halted _ mem = putStrLn "HALT!" >> debug mem
 
 main :: IO ()
 main = getArgs >>= parse >>= either debug run . parseBrainfuck
@@ -95,6 +95,3 @@ readLines = flushStr "# " >> getLine >>= \line ->
     if null line
         then return ""
         else (line ++) <$> readLines
-
-io :: (MonadIO m) => IO a -> m a
-io = liftIO
