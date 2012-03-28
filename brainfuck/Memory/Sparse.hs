@@ -20,10 +20,10 @@ instance Memory Sparse where
     shift dir (Sparse d i m) = let (+/-) = op dir in Sparse d (i +/- 1) m
 
     value   (Sparse d i m) = fromMaybe d $ M.lookup i m
-    alter f (Sparse d i m) = Sparse d i  $ M.alter (set f d) i m
+    alter f (Sparse d i m) = Sparse d i  $ M.alter (set' f d) i m
 
-set :: Eq a => (a -> a) -> a -> Maybe a -> Maybe a
-set f d v = do
+set' :: Eq a => (a -> a) -> a -> Maybe a -> Maybe a
+set' f d v = do
     let v' = f $ fromMaybe d v
     guard (v' /= d) >> return v'
 
