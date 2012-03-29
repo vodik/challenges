@@ -85,10 +85,10 @@ tell :: Monad m => w -> MachineT w t m ()
 tell v = MachineT $ \s -> return $ Result (State (out s `mappend` return v) (mem s)) ()
 
 halt :: Monad m => MachineT w t m ()
-halt = MachineT $ \s -> return $ Halt s (MachineT . const . return $ Result s ())
+halt = MachineT $ \s -> return . Halt s $ MachineT (\s' -> return $ Result s' ())
 
 input :: Monad m => MachineT w t m w
-input = MachineT $ \s -> return $ Input s (MachineT . const . return . Result s)
+input = MachineT $ \s -> return $ Input s (\i -> MachineT $ \s' -> return $ Result s' i)
 
 modify :: (Monad m, Memory t) => (t w -> t w) -> MachineT w t m ()
 modify f = get >>= put . f
