@@ -38,7 +38,7 @@ instance Monad m => Monad (MachineT w t m) where
         rst <- runMachineT f s
         case rst of
             Halt   s' c -> return . Halt  s' $ c >>= g
-            Input  s' c -> return . Input s' $ \w -> c w >>= g
+            Input  s' c -> return . Input s' $ c >=> g
             Result s' a -> runMachineT (g a) s'
 
     fail = MachineT . const . fail
