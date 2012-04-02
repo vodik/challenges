@@ -3,7 +3,7 @@ Version:        0.0.2
 Synopsis:       A brainfuck interpreter written in haskell
 Author:         Simon Gomizelj
 Maintainer:     Simon Gomizelj <simongmzlj@gmail.com>
-Homepage:       http://github.com/simongmzlj/challenges/brainfuck
+Homepage:       https://github.com/simongmzlj/challenges/tree/master/brainfuck
 Build-type:     Simple
 Cabal-version:  >=1.2
 
