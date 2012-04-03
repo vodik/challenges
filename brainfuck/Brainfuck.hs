@@ -72,7 +72,7 @@ main = getArgs >>= parse >>= either debug run . parseBrainfuck
     parse _      = usage   >> exit
 
     usage   = getProgName >>= \name -> putStrLn $ join [ "Usage: ", name, " [-vh] [file]" ]
-    version = putStrLn "Brainfuck 0.02"
+    version = putStrLn "Brainfuck 0.0.2"
     exit    = exitSuccess
 
 sparseMemory :: Sparse Cell

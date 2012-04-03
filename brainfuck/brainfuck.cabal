@@ -1,0 +1,17 @@
+Name:           brainfuck
+Version:        0.0.2
+Synopsis:       A brainfuck interpreter written in haskell
+Author:         Simon Gomizelj
+Maintainer:     Simon Gomizelj <simongmzlj@gmail.com>
+Homepage:       http://github.com/simongmzlj/challenges/brainfuck
+Build-type:     Simple
+Cabal-version:  >=1.2
+
+Executable bf
+  Main-is: Brainfuck.hs
+  Build-depends:
+    base -any,
+    containers -any,
+    mtl -any,
+    transformers -any,
+    parsec -any

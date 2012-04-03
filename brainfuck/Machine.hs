@@ -38,7 +38,7 @@ instance Monad m => Monad (MachineT w t m) where
         rst <- runMachineT f s
         case rst of
             Halt   s' c -> return . Halt  s' $ c >>= g
-            Input  s' c -> return . Input s' $ \w -> c w >>= g
+            Input  s' c -> return . Input s' $ c >=> g
             Result s' a -> runMachineT (g a) s'
 
     fail = MachineT . const . fail
@@ -85,7 +85,7 @@ tell :: Monad m => w -> MachineT w t m ()
 tell v = MachineT $ \s -> return $ Result (State (out s `mappend` return v) (mem s)) ()
 
 halt :: Monad m => MachineT w t m ()
-halt = MachineT $ \s -> return $ Halt s (MachineT $ \s' -> return $ Result s' ())
+halt = MachineT $ \s -> return . Halt s $ MachineT (\s' -> return $ Result s' ())
 
 input :: Monad m => MachineT w t m w
 input = MachineT $ \s -> return $ Input s (\i -> MachineT $ \s' -> return $ Result s' i)
