@@ -60,7 +60,7 @@ execMachineT t cb i f = run f (State mempty t)
         case rst of
             (Halt   s cont)   -> cb (out s) (mem s) >> run cont s
             (Input  s cont)   -> i >>= \w -> run (cont w) s
-            (Result s result) -> return (out s, mem s)
+            (Result s result) -> return (reverse $ out s, mem s)
 
 execMachine :: Num w => t w -> [w] -> Machine w t a -> ([w], t w)
 execMachine t i f = runIdentity $ run f (i `mappend` repeat 0) (State mempty t)
@@ -70,7 +70,7 @@ execMachine t i f = runIdentity $ run f (i `mappend` repeat 0) (State mempty t)
         case rst of
             (Halt   s cont)   -> run cont i s
             (Input  s cont)   -> run (cont x) xs s
-            (Result s result) -> return (out s, mem s)
+            (Result s result) -> return (reverse $ out s, mem s)
 
 get :: (Memory t, Monad m) => MachineT w t m (t w)
 get = MachineT $ \s -> return $ Result s (mem s)
@@ -82,7 +82,7 @@ put :: (Memory t, Monad m) => t w -> MachineT w t m ()
 put v = MachineT $ \s -> return $ Result (State (out s) v) ()
 
 tell :: Monad m => w -> MachineT w t m ()
-tell v = MachineT $ \s -> return $ Result (State (out s `mappend` return v) (mem s)) ()
+tell v = MachineT $ \s -> return $ Result (State (v : out s) (mem s)) ()
 
 halt :: Monad m => MachineT w t m ()
 halt = MachineT $ \s -> return . Halt s $ MachineT (\s' -> return $ Result s' ())
