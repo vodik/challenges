@@ -93,13 +93,13 @@ input :: Monad m => MachineT w t m w
 input = MachineT $ \s -> return $ Input s (\i -> MachineT $ \s' -> return $ Result s' i)
 
 modify :: (Monad m, Memory t) => (t w -> t w) -> MachineT w t m ()
-modify f = get >>= put . f
+modify f = get >>= (put $!) . f
 
 output :: (Monad m, Memory t, Num w) => MachineT w t m ()
 output = value >>= tell
 
 shift :: (Monad m, Memory t) => Direction -> Int -> MachineT w t m ()
-shift d n = get >>= \mem -> put $! M.shift d n mem
+shift = (modify .) . M.shift
 
 alter :: (Monad m, Memory t, Eq w, Num w) => (w -> w) -> MachineT w t m ()
 alter = modify . M.alter
