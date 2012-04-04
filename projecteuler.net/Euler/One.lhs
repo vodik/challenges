@@ -144,8 +144,10 @@ Find the product $abc$.
 12. What is the value of the first triangle number to have over five
     hundred divisors?
 
-> triangle :: Num a => [(a, a)]
-> triangle = (1, 1) : (2, 3) : map (\(n, s) -> (n + 1, s + n + 1)) (tail triangle)
+> triangle :: (Enum a, Num a) => [a]
+> triangle = scanl1 (+) [1..]
+
+> problem12 = triangle !! 10000
 
 13. Find the first ten digits of the sum of one-hundred 50-digit
     numbers.

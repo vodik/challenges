@@ -11,3 +11,9 @@ with values. `Sequence` is like `Tape` but implemented with
 `Data.Sequence` rather than with Haskell lists.
 
   [bf]: http://esolangs.org/wiki/Brainfuck
+
+## Install
+
+	runhaskell Setup configure --prefix=$HOME --user
+	runhaskell Setup build
+	runhaskell Setup install
