@@ -1,5 +1,5 @@
 module Memory.Tape
-    ( Tape (..)
+    ( Tape(..)
     , emptyTape
     ) where
 

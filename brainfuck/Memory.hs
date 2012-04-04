@@ -1,6 +1,6 @@
 module Memory
-    ( Memory (..)
-    , Direction (..)
+    ( Memory(..)
+    , Direction(..)
     ) where
 
 data Direction = L | R

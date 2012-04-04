@@ -1,8 +1,8 @@
 module Machine
     ( Memory
-    , MachineT (..)
-    , Direction (..)
-    , State (..)
+    , MachineT(..)
+    , Direction(..)
+    , State(..)
     , runMachine, execMachine, execMachineT
     , input, output, halt
     , shift, alter, value, store
@@ -16,7 +16,7 @@ import Data.Monoid
 import Data.Sequence (Seq, (|>))
 import qualified Data.Sequence as S
 
-import Memory (Memory, Direction (..))
+import Memory (Memory, Direction(..))
 import qualified Memory as M
 
 data State w t = State { out :: Seq w, mem :: t w }
