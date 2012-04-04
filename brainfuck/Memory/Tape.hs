@@ -12,8 +12,8 @@ emptyTape :: Bool -> a -> Tape a
 emptyTape i d = Tape i d [] []
 
 instance Memory Tape where
-    shift L (Tape i d l r) = uncurry (Tape i d) $! left i d l r
-    shift R (Tape i d l r) = uncurry (Tape i d) $! right  d l r
+    shift L n (Tape i d l r) = uncurry (Tape i d) $! left i n d (l, r)
+    shift R n (Tape i d l r) = uncurry (Tape i d) $! right  n d (l, r)
 
     value (Tape _ d _ []     ) = d
     value (Tape _ _ _ (r : _)) = r
@@ -21,11 +21,13 @@ instance Memory Tape where
     alter f (Tape i d l []      ) = Tape i d l [f d]
     alter f (Tape i d l (r : rs)) = Tape i d l $! (f r : rs)
 
-left :: Bool -> a -> [a] -> [a] -> ([a], [a])
-left _     _ (l : ls) r = (ls, l : r)
-left True  d []       r = ([], d : r)
-left False _ []       r = ([], r)
+left :: Bool -> Int -> a -> ([a], [a]) -> ([a], [a])
+left _     0 d lst         = lst
+left i     n d (l : ls, r) = left i     (n - 1) d (ls, l : r)
+left True  n d ([],     r) = left True  (n - 1) d ([], d : r)
+left False n d ([],     r) = left False (n - 1) d ([], r)
 
-right :: a -> [a] -> [a] -> ([a], [a])
-right d l []       = (d : l, [])
-right _ l (r : rs) = (r : l, rs)
+right :: Int -> a -> ([a], [a]) -> ([a], [a])
+right 0 d lst         = lst
+right n d (l, []    ) = right (n - 1) d (d : l, [])
+right n d (l, r : rs) = right (n - 1) d (r : l, rs)

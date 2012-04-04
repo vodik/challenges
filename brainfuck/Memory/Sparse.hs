@@ -17,7 +17,7 @@ emptySparse :: Num a => a -> Sparse a
 emptySparse d = Sparse d 0 M.empty
 
 instance Memory Sparse where
-    shift dir (Sparse d i m) = let (+/-) = op dir in Sparse d (i +/- 1) m
+    shift dir n (Sparse d i m) = let (+/-) = op dir in Sparse d (i +/- n) m
 
     value   (Sparse d i m) = fromMaybe d $ M.lookup i m
     alter f (Sparse d i m) = Sparse d i  $ M.alter (set' f d) i m

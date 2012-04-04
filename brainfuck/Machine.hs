@@ -6,7 +6,7 @@ module Machine
     , runMachine, execMachine, execMachineT
     , input, output, halt
     , shift, alter, value, store
-    , whenValue, (>*>)
+    , whenValue
     ) where
 
 import Control.Monad
@@ -99,9 +99,7 @@ output :: (Monad m, Memory t, Num w) => MachineT w t m ()
 output = value >>= tell
 
 shift :: (Monad m, Memory t) => Direction -> Int -> MachineT w t m ()
-shift d n = do
-    mem <- get
-    put $! M.shift d >* n $ mem
+shift d n = get >>= \mem -> put $! M.shift d n mem
 
 alter :: (Monad m, Memory t, Eq w, Num w) => (w -> w) -> MachineT w t m ()
 alter = modify . M.alter
@@ -114,10 +112,3 @@ store = alter . const
 
 whenValue :: (Monad m, Memory t, Eq w, Num w) => MachineT w t m () -> MachineT w t m ()
 whenValue f = value >>= \v -> when (v /= 0) f
-
-infix >*>, >*
-(>*>) :: Monad m => m a -> Int -> m ()
-(>*>) = flip replicateM_
-
-(>*) :: (a -> a) -> Int -> a -> a
-f >* n = foldl1 (.) $ replicate n f
