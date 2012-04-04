@@ -10,6 +10,8 @@ import Data.Word
 import System.Environment
 import System.Exit
 import System.IO
+import qualified Data.Foldable as F
+import qualified Data.Sequence as S
 
 import Brainfuck.Optimizer
 import Brainfuck.Parser
@@ -57,7 +59,7 @@ brainfuck = foldl1 (>>) . fmap eval
 run :: [Op] -> IO ()
 run code = do
     (out, mem) <- execMachineT tapeMemory halted safeChar . brainfuck $ optimize code
-    putStrLn $ fromCell <$> out
+    putStrLn $ fromCell <$> F.toList out
     debug mem
   where
     halted _ mem = putStrLn "HALT!" >> debug mem
