@@ -42,7 +42,7 @@ op '>' n = shift R n
 op '<' n = shift L n
 op '+' n = alter $ incCell n
 op '-' n = alter $ decCell n
-op '.' n = output >*> n
+op '.' n = replicateM_ n output
 op ',' 1 = input >>= store
 op ',' n = input >> op ',' (n - 1)
 op '#' n = halt
@@ -93,7 +93,3 @@ readLines = flushStr "# " >> getLine >>= \line ->
     if null line
         then return ""
         else (line ++) <$> readLines
-
-infix >*>
-(>*>) :: Monad m => m a -> Int -> m ()
-(>*>) = flip replicateM_
