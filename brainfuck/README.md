@@ -7,8 +7,8 @@ This interpreter has been extended to understand `#` to mark
 breakpoints.
 
 Two different memory implementations are provided. `Tape` is
-implemented in a simple zipper. `Sparse` uses as map and only
-represents cells with values and is considerably slower.
+implemented in a simple zipper. `Sparse` uses a `Data.IntMap` to be
+able to only represent cells with values. It is slower.
 
   [bf]: http://esolangs.org/wiki/Brainfuck
 

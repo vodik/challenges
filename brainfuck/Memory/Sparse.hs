@@ -4,13 +4,13 @@ module Memory.Sparse
     ) where
 
 import Control.Monad
-import Data.Map (Map)
+import Data.IntMap (IntMap)
 import Data.Maybe
-import qualified Data.Map as M
+import qualified Data.IntMap as M
 
 import Memory
 
-data Sparse a = Sparse a Int (Map Int a)
+data Sparse a = Sparse a Int (IntMap a)
     deriving (Show, Read)
 
 emptySparse :: Num a => a -> Sparse a
