@@ -24,8 +24,7 @@ Here we calculate the frequency of each letter in a message.
 
 > freqMap :: String -> FrequencyMap
 > freqMap = foldr (M.alter count) M.empty
->   where count (Just x) = Just $ x + 1
->         count Nothing  = Just 1
+>   where count = return . maybe 1 (+ 1)
 
 Now build a set containing only those characters in the frequency map
 who fall below a threshold.
