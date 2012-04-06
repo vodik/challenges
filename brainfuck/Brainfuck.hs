@@ -28,11 +28,8 @@ toCell = fromIntegral . ord
 fromCell :: Integral a => a -> Char
 fromCell = chr . fromIntegral
 
-incCell :: Num a => Int -> a -> a
-incCell = flip (+) . fromIntegral
-
-decCell :: Num a => Int -> a -> a
-decCell = flip (-) . fromIntegral
+onCell :: Num a => (a -> a -> a) -> Int -> a -> a
+onCell f = flip f . fromIntegral
 
 safeChar :: Num a => IO a
 safeChar = either (\(SomeException _) -> 0) toCell <$> try getChar
@@ -40,8 +37,8 @@ safeChar = either (\(SomeException _) -> 0) toCell <$> try getChar
 op :: (Memory t, Num w, Eq w) => Char -> Int -> Operation w t
 op '>' n = shift R n
 op '<' n = shift L n
-op '+' n = alter $ incCell n
-op '-' n = alter $ decCell n
+op '+' n = alter $ onCell (+) n
+op '-' n = alter $ onCell (-) n
 op '.' n = replicateM_ n output
 op ',' 1 = input >>= store
 op ',' n = input >> op ',' (n - 1)
@@ -68,7 +65,7 @@ main = getArgs >>= parse >>= either debug run . parseBrainfuck
   where
     parse ["-h"] = usage   >> exit
     parse ["-v"] = version >> exit
-    parse [file] = hSetBuffering stdin NoBuffering >> readFile file
+    parse [file] = readFile file
     parse []     = readLines
     parse _      = usage   >> exit
 
