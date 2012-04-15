@@ -2,28 +2,29 @@
 > import Control.Monad.State
 
 > class RomanNum a where
->    value :: Num b => a -> b
+>    value :: Num b => a -> Maybe b
 
 > instance RomanNum Char where
->    value 'I' = 1
->    value 'V' = 5
->    value 'X' = 10
->    value 'L' = 50
->    value 'C' = 100
->    value 'D' = 500
->    value 'M' = 1000
+>    value 'I' = Just 1
+>    value 'V' = Just 5
+>    value 'X' = Just 10
+>    value 'L' = Just 50
+>    value 'C' = Just 100
+>    value 'D' = Just 500
+>    value 'M' = Just 1000
+>    value _   = Nothing
 
-> fromRoman' :: (RomanNum a, Num b, Ord b) => [a] -> b -> b
-> fromRoman' []  acc = acc
-> fromRoman' [x] acc = value x + acc
-> fromRoman' (a:b:xs) acc =
->    let a' = value a
->        b' = value b
->    in if a' < b'
+> fromRoman' :: (RomanNum a, Num b, Ord b) => [a] -> b -> Maybe b
+> fromRoman' []  acc = Just acc
+> fromRoman' [x] acc = (acc +) <$> value x
+> fromRoman' (a:b:xs) acc = do
+>    a' <- value a
+>    b' <- value b
+>    if a' < b'
 >        then fromRoman' xs (acc + b' - a')
 >        else fromRoman' (b:xs) (acc + a')
 
-> fromRoman :: (Num a, Ord a) => [Char] -> a
+> fromRoman :: (Num a, Ord a) => [Char] -> Maybe a
 > fromRoman = flip fromRoman' 0
 
 
@@ -42,8 +43,8 @@
 > roman 'D' = Once 2
 
 > instance RomanNum Roman where
->     value (Repeatable n) = 1 * 10 ^ n
->     value (Once n)       = 5 * 10 ^ n
+>     value (Repeatable n) = Just $ 1 * 10 ^ n
+>     value (Once n)       = Just $ 5 * 10 ^ n
 
 > toRoman :: String -> [Roman]
 > toRoman str = (`evalStateT` 0) $ do
@@ -53,5 +54,5 @@
 
 > validate n = return ()
 
-> safeRoman :: (Num a, Ord a) => [Char] -> a
+> safeRoman :: (Num a, Ord a) => [Char] -> Maybe a
 > safeRoman = flip fromRoman' 0 . toRoman
