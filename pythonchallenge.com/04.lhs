@@ -26,7 +26,7 @@ This is the definition of the `Traverse` monad. It caries around the
 base url and tracks which node we're currently on.
 
 > newtype Traverse a = Traverse (ReaderT Base (StateT Node IO) a)
->     deriving (Functor, Applicative, Monad, MonadIO, MonadReader String, MonadState Int)
+>     deriving (Functor, Applicative, Monad, MonadIO, MonadReader Base, MonadState Node)
 
 > execTraverse :: Traverse a -> Base -> Node -> IO a
 > execTraverse (Traverse a) base node = fst <$> (`runStateT` node) (runReaderT a base)
@@ -41,7 +41,7 @@ Construct the url by concattenating the base url with the current
 node.
 
 > url :: Traverse String
-> url = liftA2 (++) ask (show <$> get)
+> url = liftA2 (++) ask $ gets show
 
 Grab the contents of the current page. There is absolutely no error
 handling here.
