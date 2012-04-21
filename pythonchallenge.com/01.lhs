@@ -29,7 +29,7 @@ capital letters, and zip this resulting list with a precisely rotated
 version of itself and build a map out of it.
 
 > cipher :: Int -> Cipher
-> cipher step = M.fromList $ [lower, upper] >>= zip `ap` rotate step
+> cipher step = M.fromList $ [lower, upper] >>= ap zip (rotate step)
 >   where lower = ['a'..'z']
 >         upper = ['A'..'Z']
 
