@@ -107,8 +107,8 @@ hundred natural numbers and the square of the sum.
    1000-digit number.
 
 > number :: IO [Int]
-> number = map digitToInt . filter (/= '\n') <$> readFile "data/08.txt"
->
+> number = map digitToInt . filter isDigit <$> readFile "data/08.txt"
+
 > groups :: Int -> [a] -> [[a]]
 > groups c xs
 >     | length xs >= c = let (l,r) = splitAt c xs in l : groups c (drop 1 l ++ r)
