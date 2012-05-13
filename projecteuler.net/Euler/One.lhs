@@ -11,9 +11,9 @@ Challenges 1-50
 > module Euler.One where
 >
 > import Control.Applicative
+> import Control.Arrow
 > import Control.Monad
-> import Control.Parallel
-> import Control.DeepSeq
+> import Data.Array
 > import Data.Char
 > import Data.List
 > import Data.Tuple
@@ -107,8 +107,8 @@ hundred natural numbers and the square of the sum.
    1000-digit number.
 
 > number :: IO [Int]
-> number = map digitToInt . filter (/= '\n') <$> readFile "data/08.txt"
->
+> number = map digitToInt . filter isDigit <$> readFile "data/08.txt"
+
 > groups :: Int -> [a] -> [[a]]
 > groups c xs
 >     | length xs >= c = let (l,r) = splitAt c xs in l : groups c (drop 1 l ++ r)
@@ -139,7 +139,39 @@ Find the product $abc$.
 11. What is the greatest product of four adjacent numbers on the same
     straight line in the 20 by 20 grid?
 
+> type Index = (Int, Int)
+> type Table = Array Index Int
+
+First generate a immutable table of numbers.
+
+> table :: IO Table
+> table = listArray ((1, 1), (20, 20)) . map read . words <$> readFile "data/11.txt"
+
+Here we define the transformations on coordinates to traverse the
+table with.
+
+> transformer :: [Index -> Index]
+> transformer =
+>     [ first  (+ 1)          -- horizontal
+>     , second (+ 1)          -- vertical
+>     , (+ 1) *** (+ 1)       -- right diagonal
+>     , (+ 1) *** subtract 1  -- left diagonal
+>     ]
+
+Now calculate each possible set of indexes that represent products and
+then calculate the actual products.
+
+> transform :: (Index, Index) -> [[Index]]
+> transform b = [ xs | i <- range b
+>                    , t <- transformer
+>                    , let xs = take 4 $ iterate t i
+>                    , all (inRange b) xs ]
 >
+> products :: Array Index Int -> [Int]
+> products t = [ product $ map (t !) s | s <- transform $ bounds t ]
+>
+> problem11 :: IO Int
+> problem11 = maximum . products <$> table
 
 12. What is the value of the first triangle number to have over five
     hundred divisors?
@@ -231,7 +263,18 @@ $$
 22. What is the total of all the name scores in the file of first
     names?
 
+The data is almost in a format which Haskell's read can understand,
+lets be cheeky and use read to parse the array.
+
+> names :: IO [String]
+> names = sort . read . mkArray <$> readFile "data/names.txt"
+>   where mkArray = ("[" ++) . (++ "]")
 >
+> score :: String -> Int
+> score = sum . map (subtract (ord '@') . ord . toUpper)
+>
+> problem22 :: IO Int
+> problem22 = sum . zipWith (\x y -> x * score y) [1..] <$> names
 
 23. Find the sum of all the positive integers which cannot be written
     as the sum of two abundant numbers.

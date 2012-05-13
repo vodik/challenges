@@ -2,4 +2,4 @@ module Main where
 
 import Euler.One
 
-main = print problem12
+main = problem11 >>= print

@@ -6,10 +6,9 @@ chase of sorts. We start on node `12345` and each subsequent page has
 instructions on how to find the next node. To solve this I wrote a
 very basic web crawler to automatically traverse the list.
 
-While it really wasn't necessary to solve this challenge and
-definitely lead to a longer solution, I decided to use monads to carry
-around the immutable and mutable data for practise. This has lead to
-a very clean solution.
+While it really wasn't necessary to solve this challenge with monads,
+it definitely lead to a longer solution. I decided to use monads to carry
+around the immutable and mutable data for practise.
 
 > {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
