@@ -18,6 +18,7 @@ import Euler.Problem13
 import Euler.Problem14
 import Euler.Problem16
 import Euler.Problem20
+import Euler.Problem21
 import Euler.Problem22
 import Euler.Problem24
 import Euler.Problem25
@@ -51,7 +52,7 @@ problem 17 = undefined
 problem 18 = undefined
 problem 19 = undefined
 problem 20 = const . return $ Result problem20
-problem 21 = undefined
+problem 21 = const . return $ Result problem21
 problem 22 = undefined
 problem 23 = undefined
 problem 24 = const . return $ Result problem24
