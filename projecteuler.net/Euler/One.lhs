@@ -231,7 +231,7 @@ $$
 > digitalRoot = (1 +) . (`mod` 9) . subtract 1
 >
 > explode :: Integral a => a -> [a]
-> explode = unfoldr (\x -> if x > 0 then Just . swap $ x `divMod` 10 else Nothing)
+> explode = unfoldr $ \x -> guard (x > 0) >> return (swap $ x `divMod` 10)
 
 > problem16 :: Integer
 > problem16 = sum . explode $ 2 ^ 1000
