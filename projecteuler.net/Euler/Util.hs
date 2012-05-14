@@ -4,29 +4,28 @@ import Control.Monad
 import Data.List
 import Data.Tuple
 
+divides :: Integral a => a -> a -> Bool
+x `divides` y = x `mod` y == 0
+
 digitalRoot :: Integral a => a -> a
 digitalRoot = (1 +) . (`mod` 9) . subtract 1
 
 explode :: Integral a => a -> [a]
 explode = unfoldr $ \x -> guard (x > 0) >> return (swap $ x `divMod` 10)
 
-primes = 2 : filter ((== 1) . length . primeFactors) [3,5..]
+digitalSum :: Integral a => a -> a
+digitalSum = sum . explode
 
--- primeFactors :: Integral a => a -> [a]
-primeFactors n = factor n primes
-  where
-    factor n (p:ps)
-        | p * p > n      = [n]
-        | n `mod` p == 0 = p : factor (n `div` p) (p:ps)
-        | otherwise      = factor n ps
+primes :: Integral a => [a]
+primes = 2 : [ x | x <- [3, 5..], length (primeFactors x) == 1 ]
 
-factors :: Integral a => a -> [a]
-factors n = go n 2
+primeFactors :: Integral a => a -> [a]
+primeFactors n = go n primes
   where
-    go 1 _ = []
-    go n f
-        | n `mod` f == 0 = f : go (n `div` f) f
-        | otherwise      = go n (f + 1)
+    go n (p : ps)
+        | p * p > n     = [n]
+        | n `divides` p = p : go (n `div` p) (p : ps)
+        | otherwise     = go n ps
 
 divisors :: Integral a => a -> [a]
-divisors y = [ x | x <- [1..y-1], y `mod` x == 0 ]
+divisors y = 1 : [ x | x <- [2..y `div` 2], y `mod` x == 0 ]
