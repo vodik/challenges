@@ -3,6 +3,7 @@ Problem 21
 
 > module Euler.Problem21 where
 >
+> import Control.Applicative
 > import Euler.Util
 
 Let $d(n)$ be defined as the sum of proper divisors of $n$ (numbers
@@ -20,11 +21,11 @@ Evaluate the sum of all the amicable numbers under $10000$.
 > sumOfDivisors :: Integral a => a -> a
 > sumOfDivisors = sum . divisors
 
-> amicableNumbers :: Integral a => [a]
-> amicableNumbers = concat $ [ [ y, x ] | x <- [1..]
->                                       , let y = sumOfDivisors x
->                                       , y < x
->                                       , x == sumOfDivisors y ]
+> amicablePairs :: Integral a => [(a, a)]
+> amicablePairs = [ (y, x) | x <- [1..]
+>                          , let y = sumOfDivisors x
+>                          , y < x
+>                          , x == sumOfDivisors y ]
 
 > problem21 :: Int
-> problem21 = sum $ takeWhile (< 10000) amicableNumbers
+> problem21 = sum $ uncurry (+) <$> takeWhile ((< 10000) . snd) amicablePairs
